@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizador Financeiro Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons para ícones modernos -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        
+        .card { background: white; border-radius: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+        .btn-primary { background-color: #3b82f6; color: white; padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s; border: none; cursor: pointer; }
+        .btn-primary:hover { background-color: #2563eb; }
+        
+        /* Menu Centralizado e Estilizado */
+        .tabs-container { display: flex; justify-content: center; gap: 1.5rem; border-bottom: 1px solid #e2e8f0; }
+        .tab-button { 
+            padding: 0.75rem 0.5rem; 
+            font-size: 0.875rem; 
+            color: #64748b; 
+            border-bottom: 2px solid transparent; 
+            transition: all 0.2s; 
+            font-weight: 400;
+            background: none;
+            cursor: pointer;
+        }
+        .tab-active { 
+            border-bottom: 2px solid #3b82f6; 
+            color: #3b82f6; 
+            font-weight: 700 !important; 
+        }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        input, select { font-size: 16px !important; } 
+        
+        /* Ajuste para inputs numéricos */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        
+        @media (max-width: 640px) {
+            .container-padding { padding: 1rem; }
+            .card-padding { padding: 1rem; }
+            .tabs-container { gap: 0.75rem; }
+        }
+
+        #reserveProgressBarContainer {
+            border: none;
+            background-color: #f1f5f9;
+        }
+
+        .delete-btn {
+            color: #ef4444;
+            padding: 4px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+        }
+        .delete-btn:hover {
+            background-color: #fee2e2;
+            transform: scale(1.1);
+        }
+
+        input[type=range] {
+            cursor: pointer;
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            margin-top: -6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Estilos de Impressão */
+        @media print {
+            .no-print { display: none !important; }
+            body { background-color: white; padding: 0; }
+            .card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; margin-bottom: 20px; }
+            .container-padding { padding: 0; }
+            input, select { border: none !important; background: transparent !important; -webkit-appearance: none; }
+            /* Esconder ícones de delete na impressão */
+            .delete-btn { display: none; }
+        }
+
+        /* Toast Notification Animation */
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 12px;
+            position: fixed;
+            z-index: 100;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
+        
+        .toast-success { background-color: #10b981; }
+        .toast-danger { background-color: #ef4444; }
+    </style>
+</head>
+<body class="pb-12 container-padding">
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-6 sticky top-0 bg-slate-50 z-50 pt-4 pb-2 no-print flex flex-col md:flex-row items-center justify-between">
+            <div class="w-full md:w-1/3"></div> <!-- Spacer for centering -->
+            
+            <div class="w-full md:w-1/3 text-center">
+                <h1 class="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">Organizador Financeiro Pro</h1>
+            </div>
+
+            <div class="w-full md:w-1/3 flex justify-end px-4 mt-2 md:mt-0">
+                <!-- Botão de limpar removido conforme solicitado -->
+            </div>
+        </header>
+        
+        <div class="tabs-container mb-6 px-2 no-print">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-button tab-active">Planejamento</button>
+            <button onclick="switchTab('investments')" id="tab-investments" class="tab-button">Investimentos</button>
+            <button onclick="switchTab('history')" id="tab-history" class="tab-button">Reserva e Histórico</button>
+        </div>
+
+        <!-- Título apenas para Impressão -->
+        <div class="hidden print:block text-center mb-8 pt-4">
+            <h1 class="text-2xl font-bold text-slate-900">Relatório Financeiro</h1>
+            <p class="text-sm text-slate-500" id="printDate"></p>
+        </div>
+
+        <!-- ABA 1: PLANEJAMENTO -->
+        <div id="view-dashboard" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-4 space-y-6">
+                <!-- Rendas -->
+                <div class="card card-padding p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-800 text-xs uppercase tracking-widest">Minhas Rendas</h3>
+                        <button onclick="addIncomeRow()" class="text-[10px] btn-primary px-2 py-1 no-print">+ Adicionar</button>
+                    </div>
+                    <div id="incomeList" class="space-y-3"></div>
+                    <div class="mt-4 pt-3 border-t flex justify-between items-end">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">Total Recebido:</span>
+                        <span id="totalIncomeDisplay" class="text-xl font-black text-emerald-600">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <!-- Metas de Gasto -->
+                <div class="card card-padding p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-800 text-xs uppercase tracking-widest">Definição de Metas (%)</h3>
+                        <button onclick="addCategory()" class="text-[10px] btn-primary px-2 py-1 no-print">+ Nova Meta</button>
+                    </div>
+                    <div id="expenseSliders" class="space-y-6"></div>
+                    <div class="mt-6 pt-4 border-t">
+                        <div class="flex justify-between text-[10px] font-bold uppercase mb-2">
+                            <span class="text-slate-500">Uso do Orçamento</span>
+                            <span id="totalPercentIndicator">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden mb-2">
+                            <div id="totalProgressBar" class="h-full transition-all bg-blue-500" style="width: 0%"></div>
+                        </div>
+                        <p class="text-[10px] text-slate-400 text-center italic">
+                            A soma das metas deve ser no máximo 100%
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-4 space-y-6">
+                <!-- Custo de Vida -->
+                <div class="card card-padding p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-800 text-xs uppercase tracking-widest">Custo de Vida</h3>
+                        <button onclick="addBillRow()" class="text-[10px] btn-primary px-2 py-1 no-print">+ Conta</button>
+                    </div>
+                    <div id="billsList" class="space-y-4"></div>
+                    <div class="mt-6 pt-4 border-t space-y-3">
+                        <div class="flex justify-between items-center px-1">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase">Total Gastos:</span>
+                            <span id="totalBillsDisplay" class="text-lg font-bold text-rose-600">R$ 0,00</span>
+                        </div>
+                        <div class="flex justify-between items-center px-1 pt-2">
+                            <span class="text-[10px] font-bold uppercase text-slate-400">Saldo Sobrando:</span>
+                            <span id="remainingBalanceDisplay" class="text-xl font-black text-emerald-500">R$ 0,00</span>
+                        </div>
+                        <div class="px-1 text-center no-print">
+                            <p class="text-[10px] text-slate-400 leading-relaxed italic">
+                                O saldo livre é o que sobra da sua renda após pagar todas as contas listadas acima.
+                            </p>
+                        </div>
+                        <button onclick="saveMonthToHistory()" class="w-full text-xs font-bold py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 uppercase shadow-lg shadow-blue-200 transition-colors cursor-pointer no-print">Fechar Mês e Salvar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-4 space-y-6">
+                <!-- Gráfico Planejamento -->
+                <div class="card card-padding p-6">
+                    <h3 class="text-center text-[10px] font-bold text-slate-400 uppercase mb-4">Distribuição Planejada</h3>
+                    <div class="relative h-64 w-full">
+                        <canvas id="financeChart"></canvas>
+                    </div>
+                </div>
+                <!-- Alertas -->
+                <div class="card card-padding p-6">
+                    <h3 class="text-[10px] font-bold text-slate-800 uppercase mb-4">Alertas de Categoria</h3>
+                    <div id="diagnoseList" class="space-y-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA 2: INVESTIMENTOS -->
+        <div id="view-investments" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-8 space-y-6">
+                    <div class="card card-padding p-6 overflow-hidden">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold text-slate-800 text-xs uppercase tracking-widest">Meus Ativos</h3>
+                            <button onclick="addInvestmentRow()" class="text-[10px] btn-primary no-print">+ Novo Ativo</button>
+                        </div>
+                        <div class="overflow-x-auto -mx-6 px-6 no-scrollbar">
+                            <table class="w-full text-left text-sm min-w-[500px]">
+                                <thead class="text-slate-400 uppercase text-[10px] border-b border-slate-100">
+                                    <tr>
+                                        <th class="pb-3">Ativo</th>
+                                        <th class="pb-3">Instituição</th>
+                                        <th class="pb-3">Tipo</th>
+                                        <th class="pb-3 text-right">Valor</th>
+                                        <th class="pb-3"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="investmentTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Dicas de Investimento (Nova Seção) -->
+                    <div class="card card-padding p-6 bg-blue-50 border-blue-100 no-print">
+                        <div class="flex items-center gap-2 mb-4">
+                            <i data-lucide="graduation-cap" class="w-5 h-5 text-blue-600"></i>
+                            <h3 class="font-bold text-blue-900 text-xs uppercase tracking-widest">Aprenda antes de Investir</h3>
+                        </div>
+                        <p class="text-xs text-blue-800 mb-4 leading-relaxed">
+                            Investir sem conhecimento é como dirigir no escuro. Antes de aportar seu dinheiro, entenda o risco de cada ativo e nunca invista em algo que você não compreende como funciona.
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white p-3 rounded-lg shadow-sm border border-blue-100">
+                                <h4 class="text-[10px] font-black uppercase text-blue-600 mb-1">1. Reserva Primeiro</h4>
+                                <p class="text-[10px] text-slate-600">Garanta sua reserva de emergência antes de ir para a bolsa de valores.</p>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg shadow-sm border border-blue-100">
+                                <h4 class="text-[10px] font-black uppercase text-blue-600 mb-1">2. Diversificação</h4>
+                                <p class="text-[10px] text-slate-600">"Não coloque todos os ovos na mesma cesta". Divida entre Renda Fixa e Variável.</p>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg shadow-sm border border-blue-100">
+                                <h4 class="text-[10px] font-black uppercase text-blue-600 mb-1">3. Foco no Longo Prazo</h4>
+                                <p class="text-[10px] text-slate-600">Investimentos servem para multiplicar patrimônio no tempo, não para "ficar rico rápido".</p>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg shadow-sm border border-blue-100">
+                                <h4 class="text-[10px] font-black uppercase text-blue-600 mb-1">4. Estude Taxas e IR</h4>
+                                <p class="text-[10px] text-slate-600">Taxas de administração e impostos podem "comer" boa parte da sua rentabilidade.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="card card-padding p-6 bg-slate-900 text-white">
+                        <div class="mb-4">
+                            <h3 class="text-[10px] font-bold uppercase text-slate-400 mb-1">Reserva de Emergência</h3>
+                            <div id="totalOnlyReserveDisplay" class="text-2xl font-black text-blue-400">R$ 0,00</div>
+                        </div>
+                        <div class="pt-4 border-t border-slate-800">
+                            <h3 class="text-[10px] font-bold uppercase text-slate-400 mb-1">Total em Investimentos</h3>
+                            <div id="totalOnlyInvestedDisplay" class="text-2xl font-black text-emerald-400">R$ 0,00</div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-slate-800 flex justify-between items-end">
+                            <span class="text-[9px] font-bold uppercase text-slate-500">Patrimônio Líquido</span>
+                            <span id="totalCombinedDisplay" class="text-sm font-bold text-slate-300">R$ 0,00</span>
+                        </div>
+                    </div>
+                    <div class="card card-padding p-6">
+                        <h3 class="text-center text-[10px] font-bold text-slate-400 uppercase mb-4">Alocação por Tipo</h3>
+                        <div class="h-56">
+                            <canvas id="investChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA 3: RESERVA E HISTÓRICO -->
+        <div id="view-history" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="card card-padding p-6 h-fit">
+                        <h3 class="font-bold text-blue-600 text-xs uppercase tracking-widest mb-4">Meta de Segurança</h3>
+                        <div class="space-y-6">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-slate-50 p-4 rounded-xl">
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase">Segurança (6 meses)</span>
+                                    <div id="reserve6" class="text-sm md:text-lg font-bold text-slate-700">R$ 0,00</div>
+                                </div>
+                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                    <span class="text-[9px] font-bold text-blue-400 uppercase">Ideal (12 meses)</span>
+                                    <div id="reserve12" class="text-sm md:text-lg font-bold text-blue-700">R$ 0,00</div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between mb-2 items-end">
+                                    <div class="flex flex-col">
+                                        <span class="text-[10px] font-bold uppercase text-slate-500">Progresso Atual</span>
+                                        <span id="reserveComparisonText" class="text-[9px] text-slate-400 font-medium tracking-tight italic">R$ 0 / R$ 0</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <span id="reserveProgressPercent" class="text-xs font-black text-blue-600">0%</span>
+                                        <div id="reserveMissingLabel" class="text-[9px] font-bold text-rose-400 uppercase">Falta: R$ 0,00</div>
+                                    </div>
+                                </div>
+                                <div id="reserveProgressBarContainer" class="w-full h-10 rounded-xl overflow-hidden relative shadow-inner">
+                                    <div id="reserveProgressBar" class="h-full bg-blue-500 transition-all duration-700" style="width: 0%"></div>
+                                    <div id="reserveProgressBarText" class="absolute inset-0 flex items-center justify-center text-[10px] font-black text-slate-700 drop-shadow-sm">R$ 0,00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card card-padding p-6">
+                        <h3 class="font-bold text-slate-800 text-xs uppercase tracking-widest mb-4">O que é a Reserva?</h3>
+                        <div class="space-y-4">
+                            <div class="flex gap-3">
+                                <div class="bg-blue-100 p-2 h-fit rounded-lg text-blue-600">
+                                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-slate-700">Para que serve?</h4>
+                                    <p class="text-[11px] text-slate-500 leading-relaxed">Cobre imprevistos como demissão, problemas de saúde ou consertos urgentes sem precisar de empréstimos.</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-3">
+                                <div class="bg-amber-100 p-2 h-fit rounded-lg text-amber-600">
+                                    <i data-lucide="help-circle" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-slate-700">Quanto guardar?</h4>
+                                    <p class="text-[11px] text-slate-500 leading-relaxed">O ideal é ter entre 6 e 12 meses do seu <strong>custo de vida atual</strong> (total de gastos) guardado.</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-3">
+                                <div class="bg-emerald-100 p-2 h-fit rounded-lg text-emerald-600">
+                                    <i data-lucide="trending-up" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-slate-700">Onde investir?</h4>
+                                    <p class="text-[11px] text-slate-500 leading-relaxed">Priorize <strong>Liquidez Diária</strong> (resgate imediato) e <strong>Baixo Risco</strong> (Tesouro Selic, CDB 100% DI).</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-7 card card-padding p-6">
+                    <h3 class="font-bold text-slate-800 mb-4 text-xs uppercase tracking-widest">Histórico Mensal</h3>
+                    <div class="overflow-x-auto -mx-6 px-6 no-scrollbar">
+                        <table class="w-full text-left text-xs min-w-[450px]">
+                            <thead class="text-slate-400 uppercase text-[9px] border-b border-slate-50">
+                                <tr>
+                                    <th class="py-3">Mês</th>
+                                    <th class="py-3">Renda</th>
+                                    <th class="py-3">Gastos</th>
+                                    <th class="py-3">Sobrou</th>
+                                    <th class="py-3 text-right"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast" class="toast">Mensagem aqui</div>
+
+    <script>
+        // --- HELPER FUNCTION FOR SAFE ID GENERATION ---
+        function generateId() {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+                return crypto.randomUUID();
+            }
+            return 'id-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now().toString(36);
+        }
+
+        // --- ESTADO ---
+        // Default values defined but will be overwritten by loadData()
+        let incomes = [{ id: generateId(), label: 'Salário Principal', value: 5000 }];
+        let categories = [
+            { id: 'cat-fixa', label: 'Contas Fixas', percent: 50, color: '#3b82f6' },
+            { id: 'cat-lazer', label: 'Lazer e Estilo', percent: 30, color: '#ec4899' },
+            { id: 'cat-inv', label: 'Investimentos', percent: 20, color: '#10b981' }
+        ];
+        let bills = [{ id: generateId(), label: 'Aluguel', value: 1500, categoryId: 'cat-fixa' }];
+        let investments = [
+            { id: 'reserve-id', asset: 'Reserva de Emergência', institution: 'Banco Digital', type: 'Reserva', value: 0 },
+        ];
+        let history = [];
+        let financeChart, investChart;
+
+        const formatCurrency = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+
+        // --- LOCAL STORAGE & UX FUNCTIONS ---
+
+        function saveData() {
+            const data = {
+                incomes,
+                categories,
+                bills,
+                investments,
+                history
+            };
+            localStorage.setItem('financePro_data', JSON.stringify(data));
+        }
+
+        function loadData() {
+            const data = localStorage.getItem('financePro_data');
+            if (data) {
+                try {
+                    const parsed = JSON.parse(data);
+                    incomes = parsed.incomes || incomes;
+                    categories = parsed.categories || categories;
+                    bills = parsed.bills || bills;
+                    investments = parsed.investments || investments;
+                    history = parsed.history || history;
+                } catch (e) {
+                    console.error("Erro ao carregar dados", e);
+                }
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const x = document.getElementById("toast");
+            x.innerText = message;
+            x.className = "toast show " + (type === 'success' ? 'toast-success' : 'toast-danger');
+            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+        }
+
+        function getRandomColor() {
+            const h = Math.floor(Math.random() * 360);
+            return `hsl(${h}, 70%, 60%)`;
+        }
+
+        function switchTab(tab) {
+            ['dashboard', 'investments', 'history'].forEach(t => {
+                const view = document.getElementById(`view-${t}`);
+                const btn = document.getElementById(`tab-${t}`);
+                if(view) view.classList.add('hidden');
+                if(btn) btn.classList.remove('tab-active');
+            });
+            const targetView = document.getElementById(`view-${tab}`);
+            const targetBtn = document.getElementById(`tab-${tab}`);
+            if(targetView) targetView.classList.remove('hidden');
+            if(targetBtn) targetBtn.classList.add('tab-active');
+            updateUI();
+        }
+
+        function addIncomeRow() { 
+            // Alterado de push para unshift para adicionar no início
+            incomes.unshift({ id: generateId(), label: 'Nova Renda', value: 0 }); 
+            renderIncomes(); 
+            updateUI(); 
+        }
+        
+        function addBillRow() { 
+            // Alterado de push para unshift para adicionar no início
+            bills.unshift({ id: generateId(), label: 'Nova Conta', value: 0, categoryId: categories[0].id }); 
+            renderBills(); 
+            updateUI(); 
+        }
+        
+        function addInvestmentRow() { 
+            // Alterado de push para unshift para adicionar no início
+            investments.unshift({ id: generateId(), asset: '', institution: '', type: 'Renda Fixa', value: 0 }); 
+            renderInvestments(); 
+            updateUI(); 
+        }
+        
+        function addCategory() {
+            categories.push({ 
+                id: 'cat-' + generateId().substring(0, 8), 
+                label: 'Nova Meta', 
+                percent: 0, 
+                color: getRandomColor()
+            });
+            renderCategories(); 
+            updateUI();
+        }
+
+        function removeIncome(id) { incomes = incomes.filter(x => x.id !== id); renderIncomes(); updateUI(); }
+        function removeBill(id) { bills = bills.filter(x => x.id !== id); renderBills(); updateUI(); }
+        function removeInvestment(id) { investments = investments.filter(x => x.id !== id); renderInvestments(); updateUI(); }
+        function removeCategory(id) { categories = categories.filter(x => x.id !== id); renderCategories(); renderBills(); updateUI(); }
+
+        function updateIncome(id, f, v) { const i = incomes.find(x => x.id === id); if(i) { i[f] = f === 'value' ? parseFloat(v) || 0 : v; updateUI(); } }
+        function updateBill(id, f, v) { const b = bills.find(x => x.id === id); if(b) { b[f] = f === 'value' ? parseFloat(v) || 0 : v; updateUI(); } }
+        function updateInvestment(id, f, v) { const i = investments.find(x => x.id === id); if(i) { i[f] = f === 'value' ? parseFloat(v) || 0 : v; updateUI(); } }
+        
+        function updateCategoryPerc(id, v) { 
+            const c = categories.find(x => x.id === id); 
+            if(c) { 
+                c.percent = parseInt(v) || 0; 
+                
+                const totalIncome = incomes.reduce((a, b) => a + b.value, 0);
+                const moneyVal = (totalIncome * c.percent) / 100;
+                
+                const valLabel = document.getElementById(`val-${id}`);
+                const percLabel = document.getElementById(`perc-${id}`);
+                if(valLabel) valLabel.innerText = formatCurrency(moneyVal);
+                if(percLabel) percLabel.innerText = c.percent + '%';
+
+                updateUI(true); 
+            } 
+        }
+
+        function updateCategoryLabel(id, v) { 
+            const c = categories.find(x => x.id === id); 
+            if(c) { 
+                c.label = v;
+                if(financeChart) {
+                    const idx = categories.findIndex(cat => cat.id === id);
+                    if(idx !== -1) {
+                        financeChart.data.labels[idx] = v;
+                        financeChart.update('none');
+                    }
+                }
+            } 
+        }
+
+        function renderIncomes() {
+            const container = document.getElementById('incomeList');
+            if (incomes.length === 0) {
+                container.innerHTML = `<div class="text-center text-slate-400 py-4 text-xs italic">Nenhuma renda cadastrada.</div>`;
+                return;
+            }
+            container.innerHTML = incomes.map(i => `
+                <div class="flex items-center gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <input type="text" value="${i.label}" oninput="updateIncome('${i.id}', 'label', this.value)" class="flex-1 text-sm bg-transparent border-none focus:ring-0">
+                    <input type="number" min="0" step="0.01" onfocus="this.select()" value="${i.value}" oninput="updateIncome('${i.id}', 'value', this.value)" class="w-24 text-sm bg-transparent font-bold text-right outline-none">
+                    <button onclick="removeIncome('${i.id}')" class="delete-btn"><i data-lucide="x" class="w-4 h-4"></i></button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function renderBills() {
+            const container = document.getElementById('billsList');
+            if (bills.length === 0) {
+                container.innerHTML = `<div class="text-center text-slate-400 py-4 text-xs italic">Nenhuma conta cadastrada.</div>`;
+                return;
+            }
+            container.innerHTML = bills.map(b => `
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <input type="text" value="${b.label}" oninput="updateBill('${b.id}', 'label', this.value)" class="flex-1 text-sm bg-transparent font-medium border-none p-0 focus:ring-0">
+                        <input type="number" min="0" step="0.01" onfocus="this.select()" value="${b.value}" oninput="updateBill('${b.id}', 'value', this.value)" class="w-24 text-sm bg-transparent text-right font-bold text-rose-500 outline-none">
+                        <button onclick="removeBill('${b.id}')" class="delete-btn"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                    <select onchange="updateBill('${b.id}', 'categoryId', this.value)" class="w-full text-[10px] uppercase font-bold text-slate-400 bg-white/50 border border-slate-200 rounded p-1">
+                        ${categories.map(c => `<option value="${c.id}" ${b.categoryId === c.id ? 'selected' : ''}>${c.label}</option>`).join('')}
+                    </select>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function renderCategories() {
+            const totalIncome = incomes.reduce((a, b) => a + b.value, 0);
+            document.getElementById('expenseSliders').innerHTML = categories.map(c => {
+                const val = (totalIncome * c.percent) / 100;
+                return `
+                <div class="space-y-1">
+                    <div class="flex justify-between items-center text-[10px] font-bold uppercase text-slate-500">
+                        <input type="text" value="${c.label}" oninput="updateCategoryLabel('${c.id}', this.value)" class="bg-transparent border-none p-0 w-28 focus:ring-0">
+                        <div class="flex items-center gap-2">
+                            <span id="val-${c.id}" class="font-bold" style="color: ${c.color}">${formatCurrency(val)}</span>
+                            <span id="perc-${c.id}" class="opacity-80 font-black" style="color: ${c.color}">${c.percent}%</span>
+                            <button onclick="removeCategory('${c.id}')" class="delete-btn"><i data-lucide="x" class="w-3 h-3"></i></button>
+                        </div>
+                    </div>
+                    <input type="range" value="${c.percent}" oninput="updateCategoryPerc('${c.id}', this.value)" class="w-full" style="accent-color: ${c.color}">
+                </div>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function renderInvestments() {
+            const container = document.getElementById('investmentTableBody');
+            if (investments.length === 0) {
+                container.innerHTML = `<tr><td colspan="5" class="text-center text-slate-400 py-6 text-xs italic">Nenhum investimento registrado.</td></tr>`;
+                return;
+            }
+            container.innerHTML = investments.map(inv => `
+                <tr class="border-b border-slate-50">
+                    <td class="py-4"><input type="text" value="${inv.asset}" placeholder="Nome" oninput="updateInvestment('${inv.id}', 'asset', this.value)" class="w-full text-xs bg-transparent border-none p-0 focus:ring-0"></td>
+                    <td class="py-4"><input type="text" value="${inv.institution}" placeholder="Banco" oninput="updateInvestment('${inv.id}', 'institution', this.value)" class="w-full text-xs bg-transparent border-none p-0 focus:ring-0"></td>
+                    <td class="py-4">
+                        <select onchange="updateInvestment('${inv.id}', 'type', this.value)" class="bg-transparent text-[10px] font-bold uppercase text-slate-500 border-none p-0 outline-none">
+                            <option value="Reserva" ${inv.type === 'Reserva' ? 'selected' : ''}>Reserva</option>
+                            <option value="Renda Fixa" ${inv.type === 'Renda Fixa' ? 'selected' : ''}>R. Fixa</option>
+                            <option value="Renda Variável" ${inv.type === 'Renda Variável' ? 'selected' : ''}>R. Variável</option>
+                        </select>
+                    </td>
+                    <td class="py-4 text-right">
+                        <input type="number" min="0" step="0.01" onfocus="this.select()" value="${inv.value}" oninput="updateInvestment('${inv.id}', 'value', this.value)" class="w-24 text-xs bg-transparent text-right font-bold text-emerald-600 outline-none">
+                    </td>
+                    <td class="py-4 text-right">
+                        ${inv.id !== 'reserve-id' ? `<button onclick="removeInvestment('${inv.id}')" class="delete-btn ml-auto"><i data-lucide="x" class="w-4 h-4"></i></button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyTableBody');
+            if (history.length === 0) {
+                container.innerHTML = `<tr><td colspan="5" class="text-center text-slate-400 py-6 text-xs italic">Nenhum histórico disponível.</td></tr>`;
+                return;
+            }
+            container.innerHTML = history.map(h => `
+                <tr class="border-b border-slate-50">
+                    <td class="py-4 font-bold uppercase text-slate-600">${h.date}</td>
+                    <td class="py-4 text-emerald-600 font-medium">${formatCurrency(h.income)}</td>
+                    <td class="py-4 text-rose-500 font-medium">${formatCurrency(h.expenses)}</td>
+                    <td class="py-4 font-bold text-slate-700">${formatCurrency(h.income - h.expenses)}</td>
+                    <td class="py-4 text-right">
+                        <button onclick="history = history.filter(x => x.id !== '${h.id}'); renderHistory();" class="delete-btn ml-auto"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function saveMonthToHistory() {
+            const inc = incomes.reduce((a, b) => a + b.value, 0);
+            const exp = bills.reduce((a, b) => a + b.value, 0);
+            const month = new Date().toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+            history.unshift({ id: generateId(), date: month, income: inc, expenses: exp });
+            renderHistory();
+            showToast("Mês fechado e adicionado ao histórico! 📅");
+            saveData(); // Force save immediately
+        }
+
+        function updateUI(isSliderMove = false) {
+            saveData(); // Save on every UI update
+            
+            const totalIncome = incomes.reduce((a, b) => a + b.value, 0);
+            const totalBills = bills.reduce((a, b) => a + b.value, 0);
+            
+            const totalReserve = investments.filter(inv => inv.type === 'Reserva').reduce((a, b) => a + b.value, 0);
+            const totalOnlyInvested = investments.filter(inv => inv.type !== 'Reserva').reduce((a, b) => a + b.value, 0);
+            
+            const remaining = totalIncome - totalBills;
+
+            document.getElementById('totalIncomeDisplay').innerText = formatCurrency(totalIncome);
+            document.getElementById('totalBillsDisplay').innerText = formatCurrency(totalBills);
+            
+            const remainingEl = document.getElementById('remainingBalanceDisplay');
+            remainingEl.innerText = formatCurrency(remaining);
+            remainingEl.className = `text-xl font-black ${remaining < 0 ? 'text-rose-600' : 'text-emerald-500'}`;
+
+            document.getElementById('totalOnlyReserveDisplay').innerText = formatCurrency(totalReserve);
+            document.getElementById('totalOnlyInvestedDisplay').innerText = formatCurrency(totalOnlyInvested);
+            document.getElementById('totalCombinedDisplay').innerText = formatCurrency(totalReserve + totalOnlyInvested);
+
+            const totalPerc = categories.reduce((a, b) => a + b.percent, 0);
+            document.getElementById('totalPercentIndicator').innerText = totalPerc + '%';
+            document.getElementById('totalProgressBar').style.width = Math.min(100, totalPerc) + '%';
+            document.getElementById('totalProgressBar').className = `h-full transition-all ${totalPerc > 100 ? 'bg-rose-500' : 'bg-blue-500'}`;
+            
+            document.getElementById('printDate').innerText = 'Gerado em: ' + new Date().toLocaleDateString('pt-BR');
+
+            if (!isSliderMove) renderCategories();
+
+            const meta12 = totalBills * 12;
+            const prog = meta12 > 0 ? Math.min(100, (totalReserve / meta12) * 100) : 0;
+            const missing = Math.max(0, meta12 - totalReserve);
+            
+            const r6 = document.getElementById('reserve6');
+            const r12 = document.getElementById('reserve12');
+            if(r6) r6.innerText = formatCurrency(totalBills * 6);
+            if(r12) r12.innerText = formatCurrency(meta12);
+            
+            document.getElementById('reserveProgressPercent').innerText = Math.round(prog) + '%';
+            document.getElementById('reserveProgressBar').style.width = prog + '%';
+            document.getElementById('reserveProgressBarText').innerText = formatCurrency(totalReserve);
+            
+            document.getElementById('reserveComparisonText').innerText = `${formatCurrency(totalReserve)} / ${formatCurrency(meta12)}`;
+            const missingLabel = document.getElementById('reserveMissingLabel');
+            missingLabel.innerText = missing > 0 ? `Falta: ${formatCurrency(missing)}` : 'Meta Concluída! 🎉';
+            missingLabel.className = missing > 0 ? 'text-[9px] font-bold text-rose-400 uppercase' : 'text-[9px] font-bold text-emerald-500 uppercase';
+
+            document.getElementById('diagnoseList').innerHTML = categories.map(c => {
+                const target = (totalIncome * c.percent) / 100;
+                const actual = bills.filter(b => b.categoryId === c.id).reduce((a, b) => a + b.value, 0);
+                const isOver = actual > target + 0.01;
+                return `
+                <div class="p-3 rounded-xl border transition-all ${isOver ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-emerald-50 border-emerald-100 text-emerald-700'}">
+                    <div class="flex justify-between font-bold uppercase text-[9px] mb-1">
+                        <span>${c.label}</span>
+                        <span>${isOver ? '⚠️ Teto Excedido' : '✅ Ok'}</span>
+                    </div>
+                    <div class="flex justify-between items-end">
+                        <span class="text-lg font-black">${Math.round((actual / (target || 1)) * 100)}%</span>
+                        <span class="text-[10px] opacity-70">${formatCurrency(actual)} / ${formatCurrency(target)}</span>
+                    </div>
+                </div>`;
+            }).join('');
+
+            if(financeChart) {
+                financeChart.data.labels = categories.map(c => c.label);
+                financeChart.data.datasets[0].data = categories.map(c => (totalIncome * c.percent) / 100);
+                financeChart.data.datasets[0].backgroundColor = categories.map(c => c.color);
+                financeChart.update('none');
+            }
+
+            if(investChart) {
+                const groups = { 'Reserva': 0, 'Renda Fixa': 0, 'Renda Variável': 0 };
+                investments.forEach(inv => groups[inv.type] += inv.value);
+                investChart.data.datasets[0].data = Object.values(groups);
+                investChart.update('none');
+            }
+        }
+
+        function initCharts() {
+            const ctx1 = document.getElementById('financeChart').getContext('2d');
+            financeChart = new Chart(ctx1, {
+                type: 'doughnut',
+                data: { labels: [], datasets: [{ data: [], borderWidth: 0, hoverOffset: 4 }] },
+                options: { cutout: '75%', plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } } }, maintainAspectRatio: false, animation: false }
+            });
+
+            const ctx2 = document.getElementById('investChart').getContext('2d');
+            investChart = new Chart(ctx2, {
+                type: 'pie',
+                data: { labels: ['Reserva', 'Fixa', 'Variável'], datasets: [{ data: [0,0,0], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'], borderWidth: 0 }] },
+                options: { plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } } }, maintainAspectRatio: false, animation: false }
+            });
+        }
+
+        window.onload = () => { 
+            loadData(); // Load saved data first
+            initCharts(); 
+            renderIncomes(); 
+            renderCategories(); 
+            renderBills(); 
+            renderInvestments(); 
+            renderHistory(); 
+            updateUI(); 
+            lucide.createIcons(); 
+        };
+    </script>
+</body>
+</html>
