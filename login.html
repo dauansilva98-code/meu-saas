@@ -12,17 +12,19 @@
   <input type="email" id="email" placeholder="Seu email"><br><br>
   <input type="password" id="password" placeholder="Sua senha"><br><br>
 
-  <button onclick="login()">Entrar</button>
+  <button id="btnLogin">Entrar</button>
 
   <p id="msg"></p>
 
   <script>
-const SUPABASE_URL = "https://izmdjkalwgupuehrbcxm.supabase.co";
-const SUPABASE_KEY = "sb_publishable_iGbNP2YKnLqwGEv7AQvohA_uUu_9mCe";
+    const SUPABASE_URL = "https://izmdjkalwgupuehrbcxm.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_iGbNP2YKnLqwGEv7AQvohA_uUu_9mCe";
 
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    async function login() {
+    const botao = document.getElementById("btnLogin");
+
+    botao.addEventListener("click", async () => {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
 
@@ -35,9 +37,12 @@ const SUPABASE_KEY = "sb_publishable_iGbNP2YKnLqwGEv7AQvohA_uUu_9mCe";
         document.getElementById("msg").innerText = "Erro: " + error.message;
       } else {
         document.getElementById("msg").innerText = "Login feito com sucesso!";
-        window.location.href = "index.html"; // vai pra sua plataforma
+        // marca como logado
+        localStorage.setItem("logado", "sim");
+        // vai pra plataforma
+        window.location.href = "index.html";
       }
-    }
+    });
   </script>
 
 </body>
