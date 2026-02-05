@@ -2,69 +2,43 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <title>Login - Meu SaaS</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .box {
-      background: #020617;
-      padding: 24px;
-      border-radius: 8px;
-      width: 300px;
-    }
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-    }
-    button {
-      cursor: pointer;
-    }
-    p {
-      margin-top: 10px;
-    }
-  </style>
+  <title>Login</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <div class="box">
-    <h2>Login</h2>
-    <input id="email" type="email" placeholder="Email" />
-    <input id="password" type="password" placeholder="Senha" />
-    <button onclick="login()">Entrar</button>
-    <p id="msg"></p>
-  </div>
+
+  <h2>Login</h2>
+
+  <input type="email" id="email" placeholder="Seu email"><br><br>
+  <input type="password" id="password" placeholder="Sua senha"><br><br>
+
+  <button onclick="login()">Entrar</button>
+
+  <p id="msg"></p>
 
   <script>
-    const supabaseUrl = "https://izmdjkalwgupuehrbcxm.supabase.co";
-    const supabaseKey = "sb_publishable_iGbNP2YKnLqwGEv7AQvohA_uUu_9mCe";
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+const SUPABASE_URL = "https://izmdjkalwgupuehrbcxm.supabase.co";
+const SUPABASE_KEY = "sb_publishable_iGbNP2YKnLqwGEv7AQvohA_uUu_9mCe";
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function login() {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
-      const msg = document.getElementById("msg");
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: email,
         password: password
       });
 
       if (error) {
-        msg.innerText = "Erro: " + error.message;
+        document.getElementById("msg").innerText = "Erro: " + error.message;
       } else {
-        msg.innerText = "Login realizado com sucesso!";
-        // Depois a gente redireciona pra sua plataforma:
-        // window.location.href = "index.html";
+        document.getElementById("msg").innerText = "Login feito com sucesso!";
+        window.location.href = "index.html"; // vai pra sua plataforma
       }
     }
   </script>
+
 </body>
 </html>
