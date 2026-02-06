@@ -2,27 +2,97 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Login - Meu SaaS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Organizador Financeiro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f0f4f8; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            color: #1a202c;
+        }
+        .login-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h2 { margin-bottom: 0.5rem; font-weight: 600; color: #2d3748; }
+        p { margin-bottom: 2rem; color: #718096; font-size: 0.9rem; }
+        
+        .input-group { text-align: left; margin-bottom: 1.2rem; }
+        label { display: block; margin-bottom: 0.5rem; font-size: 0.85rem; font-weight: 600; color: #4a5568; }
+        
+        input { 
+            width: 100%; 
+            padding: 0.75rem; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 0.5rem; 
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        input:focus { 
+            outline: none; 
+            border-color: #3182ce; 
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2); 
+        }
+        
+        button { 
+            width: 100%; 
+            padding: 0.75rem; 
+            background-color: #3182ce; 
+            color: white; 
+            border: none; 
+            border-radius: 0.5rem; 
+            font-size: 1rem; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: background 0.2s;
+            margin-top: 1rem;
+        }
+        button:hover { background-color: #2b6cb0; }
+        
+        .footer-text { margin-top: 1.5rem; font-size: 0.8rem; color: #a0aec0; }
+    </style>
 </head>
 <body>
 
-    <h2>Login</h2>
-    <input type="email" id="email" placeholder="Seu e-mail">
-    <br><br>
-    <input type="password" id="senha" placeholder="Sua senha">
-    <br><br>
+    <div class="login-card">
+        <h2>Bem-vindo de volta</h2>
+        <p>Acesse sua conta para gerenciar suas finanças</p>
 
-    <button onclick="entrar()">Entrar</button>
+        <div class="input-group">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" placeholder="exemplo@email.com">
+        </div>
+
+        <div class="input-group">
+            <label for="senha">Senha</label>
+            <input type="password" id="senha" placeholder="••••••••">
+        </div>
+
+        <button onclick="entrar()">Entrar no Painel</button>
+
+        <div class="footer-text">
+            © 2026 Organizador Financeiro Pro
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-      // Aqui vai aquele código da sua Imagem 6 que você já preencheu
       const SUPABASE_URL = 'https://izmdjkalwgupuehrbcxm.supabase.co';
-      const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6bWRqa2Fsd2d1cHVlaHJiY3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDkwNTUsImV4cCI6MjA4NTgyNTA1NX0.w3FW5oORqiEjT0Xj3d3777KfE0xl2zm0ogezpfN3Gss';
+      const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6bWRqa2Fsd2d1cHVlaHJiY3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDkwNTUsImV4cCI6MjA4NTgyNTA1NX0.w3FW5oORqiEjT0Xj3d3777KfE0xl2zm0ogezpfN3Gss'; // <--- COLOQUE SUA CHAVE AQUI NOVAMENTE
       const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
       async function entrar() {
-        // IMPORTANTE: Essas linhas abaixo devem estar DENTRO da função entrar
         const email = document.getElementById('email').value;
         const senha = document.getElementById('senha').value;
 
@@ -32,7 +102,7 @@
         });
 
         if (error) {
-          alert("Erro: " + error.message);
+          alert("Erro no login: " + error.message);
         } else {
           localStorage.setItem("logado", "sim");
           window.location.href = "index.html"; 
