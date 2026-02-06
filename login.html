@@ -9,44 +9,54 @@
 
   <h2>Login</h2>
 
-  <input type="email" id="email" placeholder="Seu email">
-  <input type="password" id="password" placeholder="Sua senha">
-  <p id="msg"></p>
+ <input type="email" id="email" placeholder="Seu email"><br><br>
+ <input type="password" id="password" placeholder="Sua senha"><br><br>
 
-  <button onclick="login()">Entrar</button>
+ <button id="btnLogin">Entrar</button>
 
-  <p id="msg"></p>
-  <script>
+ <p id="msg"></p>
+
+<script>
+  // 1. Configuração
   const SUPABASE_URL = "https://izmdjkalwgupuehrbcxm.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_iGbNP2YKnLqwGEv7AQvohA_uUu_9mCe";
+  
+  // ATENÇÃO: Cole aqui a chave que começa com "eyJ..." (Project Settings > API > anon public)
+  const SUPABASE_KEY = "SUA_CHAVE_ANON_AQUI_QUE_COMECA_COM_eyJ"; 
 
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  // 2. Inicialização (Corrigindo o acesso à biblioteca)
+  // O CDN expõe a variável global 'supabase'
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   async function login() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
+    const msgBox = document.getElementById("msg");
 
-    document.getElementById("msg").innerText = "Tentando logar...";
+    msgBox.innerText = "Tentando logar...";
+    msgBox.style.color = "blue";
 
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
+    // 3. Chamada de Login
+    const { data, error } = await client.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
 
-      if (error) {
-        document.getElementById("msg").innerText = "Erro: " + error.message;
-        console.error(error);
-      } else {
-        document.getElementById("msg").innerText = "Login feito com sucesso!";
-        console.log("Usuário:", data);
-        window.location.href = "index.html";
-      }
-    } catch (e) {
-      console.error(e);
-      document.getElementById("msg").innerText = "Erro inesperado no login";
+    if (error) {
+      console.error(error);
+      msgBox.innerText = "Erro: " + error.message;
+      msgBox.style.color = "red";
+    } else {
+      msgBox.innerText = "Login feito com sucesso! Redirecionando...";
+      msgBox.style.color = "green";
+      
+      // Pequeno delay para o usuário ler a mensagem antes de sair
+      setTimeout(() => {
+          window.location.href = "index.html";
+      }, 1000);
     }
   }
+
+  document.getElementById("btnLogin").addEventListener("click", login);
 </script>
 
 </body>
