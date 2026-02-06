@@ -9,56 +9,41 @@
 
   <h2>Login</h2>
 
-<input type="email" id="email" placeholder="Seu email"><br><br>
-<input type="password" id="password" placeholder="Sua senha"><br><br>
+  <input type="email" id="email" placeholder="Seu email"><br><br>
+  <input type="password" id="password" placeholder="Sua senha"><br><br>
 
-<button id="btnLogin">Entrar</button>
+  <button id="btnLogin">Entrar</button>
 
-<p id="msg"></p>
+  <p id="msg"></p>
 
+  <script>
+    const SUPABASE_URL = "https://izmdjkalwgupuehrbcxm.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_iGbNP2YKnLqwGEv7AQvohA_uUu_9mCe";
 
-<script>
-  
-  const SUPABASE_URL = "https://izmdjkalwgupuehrbcxm.supabase.co";
-  
-  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6bWRqa2Fsd2d1cHVlaHJiY3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDkwNTUsImV4cCI6MjA4NTgyNTA1NX0.w3FW5oORqiEjT0Xj3d3777KfE0xl2zm0ogezpfN3Gss";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    const botao = document.getElementById("btnLogin");
 
-  // 2. Inicialização (Corrigindo o acesso à biblioteca)
-  // O CDN expõe a variável global 'supabase'
-  const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    botao.addEventListener("click", async () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
 
-  async function login() {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    const msgBox = document.getElementById("msg");
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
 
-    msgBox.innerText = "Tentando logar...";
-    msgBox.style.color = "blue";
-
-    // 3. Chamada de Login
-    const { data, error } = await client.auth.signInWithPassword({
-      email: email,
-      password: password
+      if (error) {
+        document.getElementById("msg").innerText = "Erro: " + error.message;
+      } else {
+        document.getElementById("msg").innerText = "Login feito com sucesso!";
+        // marca como logado
+        localStorage.setItem("logado", "sim");
+        // vai pra plataforma
+        window.location.href = "index.html";
+      }
     });
-
-    if (error) {
-      console.error(error);
-      msgBox.innerText = "Erro: " + error.message;
-      msgBox.style.color = "red";
-    } else {
-      msgBox.innerText = "Login feito com sucesso! Redirecionando...";
-      msgBox.style.color = "green";
-      
-      // Pequeno delay para o usuário ler a mensagem antes de sair
-      setTimeout(() => {
-          window.location.href = "index.html";
-      }, 1000);
-    }
-  }
-
-  document.getElementById("btnLogin").addEventListener("click", login);
-</script>
+  </script>
 
 </body>
 </html>
