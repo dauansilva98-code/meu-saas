@@ -18,29 +18,28 @@
 
   <script>
     const SUPABASE_URL = "https://izmdjkalwgupuehrbcxm.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_iGbNP2YKnLqwGEv7AQvohA_uUu_9mCe";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6bWRqa2Fsd2d1cHVlaHJiY3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDkwNTUsImV4cCI6MjA4NTgyNTA1NX0.w3FW5oORqiEjT0Xj3d3777KfE0xl2zm0ogezpfN3Gss";
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const botao = document.getElementById("btnLogin");
-
-    botao.addEventListener("click", async () => {
+    document.getElementById("btnLogin").addEventListener("click", async () => {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
+      const msg = document.getElementById("msg");
 
-      const { data, error } = await supabase.auth.signInWithPassword({
+      msg.innerText = "Tentando logar...";
+
+      const { data, error } = await client.auth.signInWithPassword({
         email: email,
         password: password
       });
 
       if (error) {
-        document.getElementById("msg").innerText = "Erro: " + error.message;
+        console.error(error);
+        msg.innerText = "Erro: " + error.message;
       } else {
-        document.getElementById("msg").innerText = "Login feito com sucesso!";
-        // marca como logado
-        localStorage.setItem("logado", "sim");
-        // vai pra plataforma
-        window.location.href = "index.html";
+        console.log("Login OK:", data);
+        msg.innerText = "Login feito com sucesso!";
       }
     });
   </script>
