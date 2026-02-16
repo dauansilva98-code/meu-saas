@@ -418,10 +418,15 @@
 
     <script>
         // CONFIGURAÇÃO DO SUPABASE (COLOQUE SUAS CHAVES AQUI)
-        const supabaseUrl = 'SUA_URL_DO_SUPABASEhttps://izmdjkalwgupuehrbcxm.supabase.co'; // <-- COLAR URL AQUI
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6bWRqa2Fsd2d1cHVlaHJiY3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDkwNTUsImV4cCI6MjA4NTgyNTA1NX0.w3FW5oORqiEjT0Xj3d3777KfE0xl2zm0ogezpfN3Gss';   // <-- COLAR CHAVE AQUI
+        // Eu já preenchi a URL correta baseada no seu Print do Project ID!
+        const supabaseUrl = 'https://izmdjkalwgupuehrbcxm.supabase.co'; 
+        
+        // --- COLOQUE A CHAVE ABAIXO ---
+        // Pegue a chave da aba "Legacy anon" no Supabase e cole dentro das aspas.
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6bWRqa2Fsd2d1cHVlaHJiY3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDkwNTUsImV4cCI6MjA4NTgyNTA1NX0.w3FW5oORqiEjT0Xj3d3777KfE0xl2zm0ogezpfN3Gss';   
 
         // --- INICIALIZAÇÃO SEGURA DO SUPABASE ---
+        // Renomeei para _supabase para não conflitar com a biblioteca
         let _supabase = null;
         try {
             if (typeof supabase !== 'undefined') {
