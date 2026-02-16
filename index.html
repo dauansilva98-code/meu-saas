@@ -15,7 +15,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Lucide Icons para ícones modernos -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
@@ -153,15 +152,12 @@
 
     <div class="max-w-7xl mx-auto">
         <header class="mb-6 sticky top-0 bg-slate-50 z-50 pt-4 pb-2 no-print flex flex-col md:flex-row items-center justify-between">
-            <div class="w-full md:w-1/3"></div> <!-- Spacer for centering -->
-            
-            <div class="w-full md:w-1/3 text-center">
+            <div class="w-full md:w-1/3"></div> <div class="w-full md:w-1/3 text-center">
                 <h1 class="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">Organizador Financeiro Pro</h1>
             </div>
 
             <div class="w-full md:w-1/3 flex justify-end px-4 mt-2 md:mt-0">
-                <!-- Botão de limpar removido conforme solicitado -->
-            </div>
+                </div>
         </header>
         
         <div class="tabs-container mb-6 px-2 no-print">
@@ -170,16 +166,13 @@
             <button onclick="switchTab('history')" id="tab-history" class="tab-button">Reserva e Histórico</button>
         </div>
 
-        <!-- Título apenas para Impressão -->
         <div class="hidden print:block text-center mb-8 pt-4">
             <h1 class="text-2xl font-bold text-slate-900">Relatório Financeiro</h1>
             <p class="text-sm text-slate-500" id="printDate"></p>
         </div>
 
-        <!-- ABA 1: PLANEJAMENTO -->
         <div id="view-dashboard" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div class="lg:col-span-4 space-y-6">
-                <!-- Rendas -->
                 <div class="card card-padding p-6">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-slate-800 text-xs uppercase tracking-widest">Minhas Rendas</h3>
@@ -192,7 +185,6 @@
                     </div>
                 </div>
 
-                <!-- Metas de Gasto -->
                 <div class="card card-padding p-6">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-slate-800 text-xs uppercase tracking-widest">Definição de Metas (%)</h3>
@@ -215,7 +207,6 @@
             </div>
 
             <div class="lg:col-span-4 space-y-6">
-                <!-- Custo de Vida -->
                 <div class="card card-padding p-6">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-slate-800 text-xs uppercase tracking-widest">Custo de Vida</h3>
@@ -242,14 +233,12 @@
             </div>
 
             <div class="lg:col-span-4 space-y-6">
-                <!-- Gráfico Planejamento -->
                 <div class="card card-padding p-6">
                     <h3 class="text-center text-[10px] font-bold text-slate-400 uppercase mb-4">Distribuição Planejada</h3>
                     <div class="relative h-64 w-full">
                         <canvas id="financeChart"></canvas>
                     </div>
                 </div>
-                <!-- Alertas -->
                 <div class="card card-padding p-6">
                     <h3 class="text-[10px] font-bold text-slate-800 uppercase mb-4">Alertas de Categoria</h3>
                     <div id="diagnoseList" class="space-y-3"></div>
@@ -257,7 +246,6 @@
             </div>
         </div>
 
-        <!-- ABA 2: INVESTIMENTOS -->
         <div id="view-investments" class="hidden space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 <div class="lg:col-span-8 space-y-6">
@@ -282,7 +270,6 @@
                         </div>
                     </div>
 
-                    <!-- Dicas de Investimento (Nova Seção) -->
                     <div class="card card-padding p-6 bg-blue-50 border-blue-100 no-print">
                         <div class="flex items-center gap-2 mb-4">
                             <i data-lucide="graduation-cap" class="w-5 h-5 text-blue-600"></i>
@@ -336,7 +323,6 @@
             </div>
         </div>
 
-        <!-- ABA 3: RESERVA E HISTÓRICO -->
         <div id="view-history" class="hidden space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 <div class="lg:col-span-5 space-y-6">
@@ -428,10 +414,14 @@
         </div>
     </div>
 
-    <!-- Toast Notification Container -->
     <div id="toast" class="toast">Mensagem aqui</div>
 
     <script>
+        // CONFIGURAÇÃO DO SUPABASE (COLOQUE SUAS CHAVES AQUI)
+        const supabaseUrl = 'https://izmdjkalwgupuehrbcxm.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6bWRqa2Fsd2d1cHVlaHJiY3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDkwNTUsImV4cCI6MjA4NTgyNTA1NX0.w3FW5oORqiEjT0Xj3d3777KfE0xl2zm0ogezpfN3Gss';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
         // --- HELPER FUNCTION FOR SAFE ID GENERATION ---
         function generateId() {
             if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -441,7 +431,6 @@
         }
 
         // --- ESTADO ---
-        // Default values defined but will be overwritten by loadData()
         let incomes = [{ id: generateId(), label: 'Salário Principal', value: 5000 }];
         let categories = [
             { id: 'cat-fixa', label: 'Contas Fixas', percent: 50, color: '#3b82f6' },
@@ -454,65 +443,79 @@
         ];
         let history = [];
         let financeChart, investChart;
+        let saveTimeout; // Variável para controlar o "delay" do salvamento
 
         const formatCurrency = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
-        // --- LOCAL STORAGE & UX FUNCTIONS ---
+        // --- FUNÇÕES DE SALVAMENTO E CARREGAMENTO (SUPABASE) ---
 
-        // Substitua sua função saveData por esta
-async function saveData() {
-    // Pegamos o usuário logado
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) return; // Se não estiver logado, não salva
+        // Função que salva no Supabase (Async)
+        async function saveData() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return; // Se não estiver logado, não salva
+                
+                const dadosParaSalvar = {
+                    incomes,
+                    categories,
+                    bills,
+                    investments,
+                    history
+                };
 
-    const dadosParaSalvar = {
-        incomes,
-        categories,
-        bills,
-        investments,
-        history
-    };
+                const { error } = await supabase
+                    .from('dados_financeiros')
+                    .upsert({ 
+                        id: user.id, 
+                        payload: dadosParaSalvar,
+                        updated_at: new Date()
+                    });
 
-    // Salva na nuvem (tabela dados_financeiros)
-    const { error } = await supabase
-        .from('dados_financeiros')
-        .upsert({ 
-            id: user.id, 
-            payload: dadosParaSalvar,
-            updated_at: new Date()
-        });
+                if (error) console.error("Erro ao salvar no Supabase:", error);
+                // Opcional: console.log("Salvo com sucesso!");
+            } catch (err) {
+                console.error("Erro de conexão ao salvar:", err);
+            }
+        }
 
-    if (error) console.error("Erro ao salvar na nuvem:", error);
-}
+        // Função "Debounce": Só chama o saveData se o usuário parar de mexer por 1 segundo
+        function triggerSave() {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                saveData(); // Chama o salvamento real
+            }, 1000); // Espera 1 segundo
+        }
 
-// Substitua sua função loadData por esta
-async function loadData() {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) return;
+        // Função que carrega do Supabase (Async)
+        async function loadData() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return; // Se não tiver user, o script do topo já redireciona
 
-    // Busca os dados do usuário logado
-    const { data, error } = await supabase
-        .from('dados_financeiros')
-        .select('payload')
-        .eq('id', user.id)
-        .single();
+                const { data, error } = await supabase
+                    .from('dados_financeiros')
+                    .select('payload')
+                    .eq('id', user.id)
+                    .single();
 
-    if (data && data.payload) {
-        const parsed = data.payload;
-        incomes = parsed.incomes || incomes;
-        categories = parsed.categories || categories;
-        bills = parsed.bills || bills;
-        investments = parsed.investments || investments;
-        history = parsed.history || history;
-        
-        // Atualiza a tela após carregar
-        updateUI();
-    } else if (error) {
-        console.log("Nenhum dado encontrado na nuvem, usando padrões.");
-    }
-}
+                if (data && data.payload) {
+                    const parsed = data.payload;
+                    incomes = parsed.incomes || incomes;
+                    categories = parsed.categories || categories;
+                    bills = parsed.bills || bills;
+                    investments = parsed.investments || investments;
+                    history = parsed.history || history;
+                    
+                    // Atualiza a tela após carregar, mas SEM salvar de novo
+                    updateUI(false, true); 
+                    showToast("Dados carregados da nuvem! ☁️");
+                } else if (error) {
+                    console.log("Nenhum dado encontrado na nuvem, usando padrões.");
+                }
+            } catch (err) {
+                console.error("Erro ao carregar dados:", err);
+            }
+        }
 
         function showToast(message, type = 'success') {
             const x = document.getElementById("toast");
@@ -541,21 +544,18 @@ async function loadData() {
         }
 
         function addIncomeRow() { 
-            // Alterado de push para unshift para adicionar no início
             incomes.unshift({ id: generateId(), label: 'Nova Renda', value: 0 }); 
             renderIncomes(); 
             updateUI(); 
         }
         
         function addBillRow() { 
-            // Alterado de push para unshift para adicionar no início
             bills.unshift({ id: generateId(), label: 'Nova Conta', value: 0, categoryId: categories[0].id }); 
             renderBills(); 
             updateUI(); 
         }
         
         function addInvestmentRow() { 
-            // Alterado de push para unshift para adicionar no início
             investments.unshift({ id: generateId(), asset: '', institution: '', type: 'Renda Fixa', value: 0 }); 
             renderInvestments(); 
             updateUI(); 
@@ -710,26 +710,26 @@ async function loadData() {
                     <td class="py-4 text-rose-500 font-medium">${formatCurrency(h.expenses)}</td>
                     <td class="py-4 font-bold text-slate-700">${formatCurrency(h.income - h.expenses)}</td>
                     <td class="py-4 text-right">
-                        <button onclick="history = history.filter(x => x.id !== '${h.id}'); renderHistory();" class="delete-btn ml-auto"><i data-lucide="x" class="w-4 h-4"></i></button>
+                        <button onclick="history = history.filter(x => x.id !== '${h.id}'); renderHistory(); updateUI();" class="delete-btn ml-auto"><i data-lucide="x" class="w-4 h-4"></i></button>
                     </td>
                 </tr>
             `).join('');
             lucide.createIcons();
         }
 
-        async function saveMonthToHistory() {
+        function saveMonthToHistory() {
             const inc = incomes.reduce((a, b) => a + b.value, 0);
             const exp = bills.reduce((a, b) => a + b.value, 0);
             const month = new Date().toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
             history.unshift({ id: generateId(), date: month, income: inc, expenses: exp });
             renderHistory();
             showToast("Mês fechado e adicionado ao histórico! 📅");
-            await saveData(); // Force save immediately
+            saveData(); // Salva imediatamente ao fechar o mês
         }
 
-        async function updateUI(isSliderMove = false) {
-            await saveData(); // Save on every UI update
-            
+        // Função principal de atualização (modificada para não travar)
+        function updateUI(isSliderMove = false, skipSave = false) {
+            // 1. PRIMEIRO faz os cálculos (isso garante que a tela funcione instantaneamente)
             const totalIncome = incomes.reduce((a, b) => a + b.value, 0);
             const totalBills = bills.reduce((a, b) => a + b.value, 0);
             
@@ -806,6 +806,12 @@ async function loadData() {
                 investChart.data.datasets[0].data = Object.values(groups);
                 investChart.update('none');
             }
+
+            // 2. DEPOIS, e só depois, tenta salvar na nuvem
+            // Se skipSave for true, a gente pula o salvamento (útil ao carregar a página)
+            if (!skipSave) {
+                triggerSave(); // Usa a função inteligente que espera você parar de digitar
+            }
         }
 
         function initCharts() {
@@ -824,15 +830,19 @@ async function loadData() {
             });
         }
 
-        window.onload = () => { 
-            loadData(); // Load saved data first
+        window.onload = async () => { 
+            // Inicializa gráficos vazios
             initCharts(); 
+            // Carrega os dados da nuvem
+            await loadData();
+            
+            // Renderiza tudo com os dados (da nuvem ou padrão)
             renderIncomes(); 
             renderCategories(); 
             renderBills(); 
             renderInvestments(); 
             renderHistory(); 
-            updateUI(); 
+            updateUI(false, true); // updateUI inicial sem salvar para não sobrescrever a nuvem
             lucide.createIcons(); 
         };
     </script>
@@ -841,12 +851,6 @@ async function loadData() {
         localStorage.removeItem("logado");
         window.location.href = "login.html";
       }
-
-      // Quando a página termina de carregar
-window.addEventListener('DOMContentLoaded', () => {
-    loadData();
-});
-
     </script>
 </body>
 </html>
