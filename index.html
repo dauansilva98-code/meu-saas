@@ -459,32 +459,60 @@
 
         // --- LOCAL STORAGE & UX FUNCTIONS ---
 
-        function saveData() {
-            const data = {
-                incomes,
-                categories,
-                bills,
-                investments,
-                history
-            };
-            localStorage.setItem('financePro_data', JSON.stringify(data));
-        }
+        // Substitua sua função saveData por esta
+async function saveData() {
+    // Pegamos o usuário logado
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) return; // Se não estiver logado, não salva
 
-        function loadData() {
-            const data = localStorage.getItem('financePro_data');
-            if (data) {
-                try {
-                    const parsed = JSON.parse(data);
-                    incomes = parsed.incomes || incomes;
-                    categories = parsed.categories || categories;
-                    bills = parsed.bills || bills;
-                    investments = parsed.investments || investments;
-                    history = parsed.history || history;
-                } catch (e) {
-                    console.error("Erro ao carregar dados", e);
-                }
-            }
-        }
+    const dadosParaSalvar = {
+        incomes,
+        categories,
+        bills,
+        investments,
+        history
+    };
+
+    // Salva na nuvem (tabela dados_financeiros)
+    const { error } = await supabase
+        .from('dados_financeiros')
+        .upsert({ 
+            id: user.id, 
+            payload: dadosParaSalvar,
+            updated_at: new Date()
+        });
+
+    if (error) console.error("Erro ao salvar na nuvem:", error);
+}
+
+// Substitua sua função loadData por esta
+async function loadData() {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) return;
+
+    // Busca os dados do usuário logado
+    const { data, error } = await supabase
+        .from('dados_financeiros')
+        .select('payload')
+        .eq('id', user.id)
+        .single();
+
+    if (data && data.payload) {
+        const parsed = data.payload;
+        incomes = parsed.incomes || incomes;
+        categories = parsed.categories || categories;
+        bills = parsed.bills || bills;
+        investments = parsed.investments || investments;
+        history = parsed.history || history;
+        
+        // Atualiza a tela após carregar
+        updateUI();
+    } else if (error) {
+        console.log("Nenhum dado encontrado na nuvem, usando padrões.");
+    }
+}
 
         function showToast(message, type = 'success') {
             const x = document.getElementById("toast");
@@ -689,18 +717,18 @@
             lucide.createIcons();
         }
 
-        function saveMonthToHistory() {
+        async function saveMonthToHistory() {
             const inc = incomes.reduce((a, b) => a + b.value, 0);
             const exp = bills.reduce((a, b) => a + b.value, 0);
             const month = new Date().toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
             history.unshift({ id: generateId(), date: month, income: inc, expenses: exp });
             renderHistory();
             showToast("Mês fechado e adicionado ao histórico! 📅");
-            saveData(); // Force save immediately
+            await saveData(); // Force save immediately
         }
 
-        function updateUI(isSliderMove = false) {
-            saveData(); // Save on every UI update
+        async function updateUI(isSliderMove = false) {
+            await saveData(); // Save on every UI update
             
             const totalIncome = incomes.reduce((a, b) => a + b.value, 0);
             const totalBills = bills.reduce((a, b) => a + b.value, 0);
@@ -813,6 +841,12 @@
         localStorage.removeItem("logado");
         window.location.href = "login.html";
       }
+
+      // Quando a página termina de carregar
+window.addEventListener('DOMContentLoaded', () => {
+    loadData();
+});
+
     </script>
 </body>
 </html>
