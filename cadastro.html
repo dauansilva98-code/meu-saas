@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* --- CONFIGURAÇÃO GERAL E FUNDO --- */
+        /* --- CONFIGURAÇÃO GERAL E FUNDO DARK --- */
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
@@ -17,88 +17,84 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            /* Gradiente de Fundo Estilo "Lovable" */
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            background-image: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-                              radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
-                              radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
-            background-size: cover;
-            color: #333;
+            /* Fundo Escuro Baseado na sua Imagem */
+            background-color: #1A1B2E; /* Tom aproximado do fundo da imagem */
+            background: radial-gradient(circle at top center, #2A2B4E 0%, #1A1B2E 100%);
+            color: #fff;
         }
 
-        /* --- O CARTÃO (CARD) --- */
+        /* --- O CARTÃO (CARD) ESTILO GLASS DARK --- */
         .card {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.05); /* Vidro muito sutil */
             padding: 40px 32px;
-            border-radius: 24px; /* Bordas bem arredondadas */
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             text-align: center;
             width: 100%;
-            max-width: 380px;
-            backdrop-filter: blur(10px); /* Efeito de vidro */
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            transition: transform 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-5px); /* Leve flutuação ao passar o mouse */
+            max-width: 400px;
+            backdrop-filter: blur(20px); /* Desfoque forte */
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         /* --- TIPOGRAFIA --- */
         h2 {
-            color: #1a1a1a;
-            margin: 0 0 8px 0;
-            font-size: 26px;
+            color: #fff;
+            margin: 0 0 12px 0;
+            font-size: 28px;
             font-weight: 700;
-            letter-spacing: -0.5px;
         }
 
         p.subtitle {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 32px;
+            color: #A0AEC0; /* Cinza claro */
+            font-size: 15px;
+            margin-bottom: 36px;
             line-height: 1.5;
         }
 
         /* --- INPUTS (CAMPOS) --- */
         .input-group {
-            margin-bottom: 16px;
+            margin-bottom: 20px;
             text-align: left;
         }
 
         label {
             display: block;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
-            color: #555;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            color: #E2E8F0;
+            margin-bottom: 8px;
         }
 
         input {
             width: 100%;
-            padding: 14px;
-            border: 2px solid #e1e1e1;
+            padding: 14px 16px;
+            /* Fundo do input escuro */
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
-            font-size: 15px;
+            font-size: 16px;
+            color: #fff;
             box-sizing: border-box;
             transition: all 0.2s ease;
             outline: none;
-            background: #f9f9f9;
+        }
+
+        input::placeholder {
+            color: #718096;
         }
 
         input:focus {
-            border-color: #635bff; /* Roxo Stripe */
-            background: #fff;
-            box-shadow: 0 0 0 4px rgba(99, 91, 255, 0.1);
+            border-color: #8B5CF6; /* Roxo do seu botão */
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+            background: rgba(255, 255, 255, 0.12);
         }
 
         /* --- BOTÃO --- */
         button {
             width: 100%;
             padding: 16px;
-            background: linear-gradient(135deg, #635bff 0%, #4b45c6 100%);
+            /* Gradiente Roxo Vibrante (Igual ao seu site) */
+            background: linear-gradient(to right, #8B5CF6, #6D28D9);
             color: white;
             border: none;
             border-radius: 12px;
@@ -107,13 +103,13 @@
             font-weight: 600;
             margin-top: 24px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(99, 91, 255, 0.3);
+            box-shadow: 0 10px 15px -3px rgba(109, 40, 217, 0.4);
         }
 
         button:hover {
+            filter: brightness(1.15);
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(99, 91, 255, 0.4);
-            filter: brightness(1.1);
+            box-shadow: 0 20px 25px -5px rgba(109, 40, 217, 0.5);
         }
 
         button:active {
@@ -122,54 +118,57 @@
 
         /* --- FEEDBACK E LINKS --- */
         #feedback {
-            font-size: 13px;
-            margin-top: 16px;
+            font-size: 14px;
+            margin-top: 20px;
             min-height: 20px;
             font-weight: 500;
         }
 
         .link-login {
-            margin-top: 24px;
+            margin-top: 28px;
             display: block;
-            font-size: 13px;
-            color: #666;
+            font-size: 14px;
+            color: #A0AEC0;
             text-decoration: none;
             transition: color 0.2s;
         }
 
         .link-login:hover {
-            color: #635bff;
-            text-decoration: underline;
+            color: #8B5CF6;
+        }
+        
+        .link-login b {
+            color: #fff;
         }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>🚀 Comece Agora</h2>
-        <p class="subtitle">Crie sua conta para desbloquear recursos exclusivos e backups automáticos.</p>
+        <h2>🚀 Crie sua conta Premium</h2>
+        <p class="subtitle">Organize suas finanças com o poder total da nossa plataforma.</p>
         
         <div class="input-group">
             <label for="email">E-mail</label>
-            <input type="email" id="email" placeholder="nome@exemplo.com">
+            <input type="email" id="email" placeholder="seu@email.com">
         </div>
 
         <div class="input-group">
             <label for="password">Senha</label>
-            <input type="password" id="password" placeholder="Mínimo 6 caracteres">
+            <input type="password" id="password" placeholder="Sua senha secreta">
         </div>
         
         <button onclick="criarContaEPagar()">
-            Ir para Pagamento ➔
+            Continuar para Pagamento ➔
         </button>
         
         <p id="feedback"></p>
         
-        <a href="login.html" class="link-login">Já tem uma conta? <b>Fazer Login</b></a>
+        <a href="login.html" class="link-login">Já possui uma conta? <b>Fazer Login</b></a>
     </div>
 
     <script>
-        // --- SUAS CHAVES REAIS (Mantidas do seu código anterior) ---
+        // --- SUAS CHAVES REAIS (Mantidas) ---
         const supabaseUrl = 'https://izmdjkalwgupuehrbcxm.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6bWRqa2Fsd2d1cHVlaHJiY3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDkwNTUsImV4cCI6MjA4NTgyNTA1NX0.w3FW5oORqiEjT0Xj3d3777KfE0xl2zm0ogezpfN3Gss';
         
@@ -177,19 +176,19 @@
 
         const LINK_DO_STRIPE = "https://buy.stripe.com/test_28E4gB89g0EN075gaqcs800"; 
 
-        // --- LÓGICA ---
+        // --- LÓGICA (Igual à anterior) ---
         async function criarContaEPagar() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const feedback = document.getElementById('feedback');
 
             if (!email || !password) {
-                feedback.style.color = "#dc2626"; // Vermelho
+                feedback.style.color = "#F87171"; // Vermelho claro
                 feedback.innerText = "Por favor, preencha todos os campos.";
                 return;
             }
 
-            feedback.style.color = "#4f46e5"; // Roxo/Azul
+            feedback.style.color = "#8B5CF6"; // Roxo
             feedback.innerText = "Criando sua conta...";
 
             const { data, error } = await supabaseClient.auth.signUp({
@@ -198,17 +197,17 @@
             });
 
             if (error) {
-                feedback.style.color = "#dc2626";
+                feedback.style.color = "#F87171";
                 feedback.innerText = "Erro: " + error.message;
             } else {
-                feedback.style.color = "#16a34a"; // Verde
+                feedback.style.color = "#34D399"; // Verde claro
                 feedback.innerText = "Sucesso! Redirecionando...";
                 
                 if (data?.user?.id) {
                     const usuarioId = data.user.id;
                     setTimeout(() => {
                         window.location.href = `${LINK_DO_STRIPE}?client_reference_id=${usuarioId}`;
-                    }, 1000); // Pequeno delay pra ele ver a msg de sucesso
+                    }, 1000);
                 } else {
                     feedback.innerText = "Verifique seu e-mail para confirmar!";
                 }
