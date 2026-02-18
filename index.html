@@ -145,11 +145,7 @@
         .toast-danger { background-color: #ef4444; }
     </style>
 </head>
-<body>
-
-<div id="save-status" style="position: fixed; top: 10px; right: 10px; font-size: 12px; display: none; background: #e2e8f0; padding: 4px 8px; border-radius: 4px;">
-    ☁️ Salvando...
-</div>class="pb-12 container-padding">
+<body class="pb-12 container-padding">
     <button onclick="sair()" style="position: fixed; top: 20px; right: 20px; background-color: #ef4444; color: white; padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; z-index: 1000;">
     Sair do Sistema
 </button>
@@ -470,28 +466,27 @@
         // --- FUNÇÕES DE NUVEM (ASSÍNCRONAS E SEGURAS) ---
 
         async function saveData() {
-    const statusEl = document.getElementById('save-status');
-    if(statusEl) statusEl.style.display = 'block'; // Mostra "Salvando..."
+            if (!_supabase) return; // Não trava se a biblioteca falhar
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (!user) return; 
+                
+                const dadosParaSalvar = { incomes, categories, bills, investments, history };
 
-    const dadosParaSalvar = { incomes, categories, bills, investments, history };
+                const { error } = await _supabase
+                    .from('dados_financeiros')
+                    .upsert({ 
+                        id: user.id, 
+                        payload: dadosParaSalvar,
+                        updated_at: new Date()
+                    });
 
-    const { error } = await supabase
-        .from('dados_financeiros')
-        .upsert({ id: user.id, payload: dadosParaSalvar, updated_at: new Date() });
-
-    if (error) {
-        console.error("Erro ao salvar:", error);
-        if(statusEl) statusEl.innerText = "❌ Erro ao salvar";
-    } else {
-        // Esconde o aviso após 1 segundo se der tudo certo
-        setTimeout(() => { 
-            if(statusEl) statusEl.style.display = 'none'; 
-        }, 1000);
-    }
-}
+                if (error) console.error("Erro Supabase:", error);
+            } catch (err) {
+                console.error("Erro de conexão (Save):", err);
+            }
+        }
 
         function triggerSave() {
             clearTimeout(saveTimeout);
