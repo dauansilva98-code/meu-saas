@@ -3,81 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Criar Conta Premium</title>
+    <title>Assinar Premium | Joyful Pitch</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f4; }
-        .card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; width: 300px; }
-        input { width: 90%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
-        button { width: 100%; padding: 10px; background-color: #635bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-        button:hover { background-color: #4b45c6; }
+        /* --- CONFIGURAÇÃO GERAL E FUNDO --- */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            /* Gradiente de Fundo Estilo "Lovable" */
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background-image: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                              radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                              radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-size: cover;
+            color: #333;
+        }
+
+        /* --- O CARTÃO (CARD) --- */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px 32px;
+            border-radius: 24px; /* Bordas bem arredondadas */
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 100%;
+            max-width: 380px;
+            backdrop-filter: blur(10px); /* Efeito de vidro */
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px); /* Leve flutuação ao passar o mouse */
+        }
+
+        /* --- TIPOGRAFIA --- */
+        h2 {
+            color: #1a1a1a;
+            margin: 0 0 8px 0;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        p.subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        /* --- INPUTS (CAMPOS) --- */
+        .input-group {
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e1e1e1;
+            border-radius: 12px;
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+            outline: none;
+            background: #f9f9f9;
+        }
+
+        input:focus {
+            border-color: #635bff; /* Roxo Stripe */
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(99, 91, 255, 0.1);
+        }
+
+        /* --- BOTÃO --- */
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #635bff 0%, #4b45c6 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 24px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(99, 91, 255, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(99, 91, 255, 0.4);
+            filter: brightness(1.1);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* --- FEEDBACK E LINKS --- */
+        #feedback {
+            font-size: 13px;
+            margin-top: 16px;
+            min-height: 20px;
+            font-weight: 500;
+        }
+
+        .link-login {
+            margin-top: 24px;
+            display: block;
+            font-size: 13px;
+            color: #666;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .link-login:hover {
+            color: #635bff;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>🚀 Criar Conta</h2>
-        <p>Crie sua senha para acessar o painel e ir para o pagamento.</p>
+        <h2>🚀 Comece Agora</h2>
+        <p class="subtitle">Crie sua conta para desbloquear recursos exclusivos e backups automáticos.</p>
         
-        <input type="email" id="email" placeholder="Seu melhor e-mail">
-        <input type="password" id="password" placeholder="Crie uma senha segura">
+        <div class="input-group">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" placeholder="nome@exemplo.com">
+        </div>
+
+        <div class="input-group">
+            <label for="password">Senha</label>
+            <input type="password" id="password" placeholder="Mínimo 6 caracteres">
+        </div>
         
-        <button onclick="criarContaEPagar()">Ir para Pagamento ➔</button>
-        <p id="status" style="color: red; font-size: 12px; margin-top: 10px;"></p>
+        <button onclick="criarContaEPagar()">
+            Ir para Pagamento ➔
+        </button>
+        
+        <p id="feedback"></p>
+        
+        <a href="login.html" class="link-login">Já tem uma conta? <b>Fazer Login</b></a>
     </div>
 
     <script>
-        // --- SUAS CHAVES REAIS (Já preenchidas) ---
-        const supabaseUrl = 'https://izmdjkalwgupuehrbcxm.supabase.co'
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6bWRqa2Fsd2d1cHVlaHJiY3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDkwNTUsImV4cCI6MjA4NTgyNTA1NX0.w3FW5oORqiEjT0Xj3d3777KfE0xl2zm0ogezpfN3Gss'
+        // --- SUAS CHAVES REAIS (Mantidas do seu código anterior) ---
+        const supabaseUrl = 'https://izmdjkalwgupuehrbcxm.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6bWRqa2Fsd2d1cHVlaHJiY3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDkwNTUsImV4cCI6MjA4NTgyNTA1NX0.w3FW5oORqiEjT0Xj3d3777KfE0xl2zm0ogezpfN3Gss';
         
-        // CORREÇÃO: Usando 'supabaseClient' para não dar erro no navegador
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey)
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // SEU LINK DO STRIPE
         const LINK_DO_STRIPE = "https://buy.stripe.com/test_28E4gB89g0EN075gaqcs800"; 
 
         // --- LÓGICA ---
         async function criarContaEPagar() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const statusTexto = document.getElementById('status');
+            const feedback = document.getElementById('feedback');
 
             if (!email || !password) {
-                statusTexto.innerText = "Preencha e-mail e senha!";
+                feedback.style.color = "#dc2626"; // Vermelho
+                feedback.innerText = "Por favor, preencha todos os campos.";
                 return;
             }
 
-            statusTexto.style.color = "blue";
-            statusTexto.innerText = "Criando conta...";
+            feedback.style.color = "#4f46e5"; // Roxo/Azul
+            feedback.innerText = "Criando sua conta...";
 
-            // 1. Cria usuário usando o cliente corrigido
             const { data, error } = await supabaseClient.auth.signUp({
                 email: email,
                 password: password
             });
 
             if (error) {
-                statusTexto.style.color = "red";
-                statusTexto.innerText = "Erro: " + error.message;
-                console.error(error); // Mostra o erro real no console se houver
+                feedback.style.color = "#dc2626";
+                feedback.innerText = "Erro: " + error.message;
             } else {
-                // 2. SUCESSO!
-                statusTexto.style.color = "green";
-                statusTexto.innerText = "Sucesso! Redirecionando...";
+                feedback.style.color = "#16a34a"; // Verde
+                feedback.innerText = "Sucesso! Redirecionando...";
                 
-                // Se o cadastro funcionou, mas o usuário já existe, o Supabase não retorna user.id às vezes.
-                // Mas assumindo conta nova:
                 if (data?.user?.id) {
                     const usuarioId = data.user.id;
-                    window.location.href = `${LINK_DO_STRIPE}?client_reference_id=${usuarioId}`;
+                    setTimeout(() => {
+                        window.location.href = `${LINK_DO_STRIPE}?client_reference_id=${usuarioId}`;
+                    }, 1000); // Pequeno delay pra ele ver a msg de sucesso
                 } else {
-                    // Caso o usuário tenha acabado de confirmar email ou algo assim
-                    statusTexto.innerText = "Verifique seu e-mail para confirmar o cadastro!";
+                    feedback.innerText = "Verifique seu e-mail para confirmar!";
                 }
             }
         }
     </script>
+
 </body>
 </html>
