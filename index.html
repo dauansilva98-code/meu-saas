@@ -832,4 +832,58 @@
       }
     </script>
 </body>
+<div id="area-assinatura" style="text-align: center; margin: 20px; display: none;">
+  <h3>🚀 Desbloqueie o Poder Total</h3>
+  <p>Tenha acesso ilimitado e backups na nuvem.</p>
+  <button onclick="assinarPremium()" 
+    style="background-color: #635bff; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold;">
+    💎 Assinar Agora (R$ 29,90)
+  </button>
+</div>
+
+<script>
+  // ⚠️ IMPORTANTE: Troque o link abaixo pelo SEU link que você acabou de copiar
+  const SEU_LINK_STRIPE = "https://buy.stripe.com/test_28E4gB89g0EN075gaqcs800"; 
+
+  // Função que roda assim que a página carrega
+  async function verificarStatusAssinatura() {
+    // 1. Pega o usuário logado
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      // 2. Olha na tabela 'profiles' se ele já é premium
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status')
+        .eq('id', user.id)
+        .single();
+
+      // 3. Se NÃO for 'active', mostra o botão de comprar
+      if (!profile || profile.subscription_status !== 'active') {
+        document.getElementById('area-assinatura').style.display = 'block';
+      } else {
+        console.log("Usuário já é Premium! Escondendo botão.");
+      }
+    }
+  }
+
+  // Função do Clique do Botão
+  async function assinarPremium() {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (user) {
+      // A MÁGICA: Adiciona o ID do usuário no link
+      // Isso garante que o Stripe saiba quem está pagando
+      const linkFinal = `${SEU_LINK_STRIPE}?client_reference_id=${user.id}`;
+      
+      // Abre o checkout do Stripe numa nova aba
+      window.open(linkFinal, '_blank');
+    } else {
+      alert("Você precisa estar logado para assinar!");
+    }
+  }
+
+  // Inicia a verificação
+  window.addEventListener('load', verificarStatusAssinatura);
+</script>
 </html>
