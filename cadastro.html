@@ -17,58 +17,42 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            /* Fundo Escuro Baseado na sua Imagem */
-            background-color: #1A1B2E; /* Tom aproximado do fundo da imagem */
+            background-color: #1A1B2E;
             background: radial-gradient(circle at top center, #2A2B4E 0%, #1A1B2E 100%);
             color: #fff;
         }
 
-        /* --- O CARTÃO (CARD) ESTILO GLASS DARK --- */
+        /* --- O CARTÃO (CARD) --- */
         .card {
-            background: rgba(255, 255, 255, 0.05); /* Vidro muito sutil */
+            background: rgba(255, 255, 255, 0.05);
             padding: 40px 32px;
             border-radius: 24px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             text-align: center;
             width: 100%;
             max-width: 400px;
-            backdrop-filter: blur(20px); /* Desfoque forte */
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* --- TIPOGRAFIA --- */
-        h2 {
-            color: #fff;
-            margin: 0 0 12px 0;
-            font-size: 28px;
-            font-weight: 700;
-        }
+        h2 { color: #fff; margin: 0 0 12px 0; font-size: 28px; font-weight: 700; }
+        p.subtitle { color: #A0AEC0; font-size: 15px; margin-bottom: 36px; line-height: 1.5; }
 
-        p.subtitle {
-            color: #A0AEC0; /* Cinza claro */
-            font-size: 15px;
-            margin-bottom: 36px;
-            line-height: 1.5;
-        }
+        /* --- INPUTS E LABEL --- */
+        .input-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; font-size: 13px; font-weight: 600; color: #E2E8F0; margin-bottom: 8px; }
 
-        /* --- INPUTS (CAMPOS) --- */
-        .input-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: #E2E8F0;
-            margin-bottom: 8px;
+        /* Container para posicionar o olhinho */
+        .password-container {
+            position: relative;
+            display: flex;
+            align-items: center;
         }
 
         input {
             width: 100%;
             padding: 14px 16px;
-            /* Fundo do input escuro */
+            padding-right: 45px; /* Espaço extra para o ícone não ficar em cima do texto */
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
@@ -79,21 +63,27 @@
             outline: none;
         }
 
-        input::placeholder {
-            color: #718096;
-        }
-
+        input::placeholder { color: #718096; }
         input:focus {
-            border-color: #8B5CF6; /* Roxo do seu botão */
+            border-color: #8B5CF6;
             box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
             background: rgba(255, 255, 255, 0.12);
         }
+
+        /* --- ÍCONE DO OLHO --- */
+        .eye-icon {
+            position: absolute;
+            right: 15px;
+            cursor: pointer;
+            color: #A0AEC0;
+            transition: color 0.2s;
+        }
+        .eye-icon:hover { color: #fff; }
 
         /* --- BOTÃO --- */
         button {
             width: 100%;
             padding: 16px;
-            /* Gradiente Roxo Vibrante (Igual ao seu site) */
             background: linear-gradient(to right, #8B5CF6, #6D28D9);
             color: white;
             border: none;
@@ -105,41 +95,12 @@
             transition: all 0.3s ease;
             box-shadow: 0 10px 15px -3px rgba(109, 40, 217, 0.4);
         }
+        button:hover { filter: brightness(1.15); transform: translateY(-2px); }
 
-        button:hover {
-            filter: brightness(1.15);
-            transform: translateY(-2px);
-            box-shadow: 0 20px 25px -5px rgba(109, 40, 217, 0.5);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        /* --- FEEDBACK E LINKS --- */
-        #feedback {
-            font-size: 14px;
-            margin-top: 20px;
-            min-height: 20px;
-            font-weight: 500;
-        }
-
-        .link-login {
-            margin-top: 28px;
-            display: block;
-            font-size: 14px;
-            color: #A0AEC0;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .link-login:hover {
-            color: #8B5CF6;
-        }
-        
-        .link-login b {
-            color: #fff;
-        }
+        #feedback { font-size: 14px; margin-top: 20px; min-height: 20px; font-weight: 500; }
+        .link-login { margin-top: 28px; display: block; font-size: 14px; color: #A0AEC0; text-decoration: none; }
+        .link-login:hover { color: #8B5CF6; }
+        .link-login b { color: #fff; }
     </style>
 </head>
 <body>
@@ -155,7 +116,12 @@
 
         <div class="input-group">
             <label for="password">Senha</label>
-            <input type="password" id="password" placeholder="Sua senha secreta">
+            <div class="password-container">
+                <input type="password" id="password" placeholder="Sua senha secreta">
+                <span class="eye-icon" onclick="togglePassword()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="eyeSvg"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </span>
+            </div>
         </div>
         
         <button onclick="criarContaEPagar()">
@@ -168,27 +134,41 @@
     </div>
 
     <script>
-        // --- SUAS CHAVES REAIS (Mantidas) ---
+        // --- CONFIGURAÇÃO ---
         const supabaseUrl = 'https://izmdjkalwgupuehrbcxm.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6bWRqa2Fsd2d1cHVlaHJiY3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDkwNTUsImV4cCI6MjA4NTgyNTA1NX0.w3FW5oORqiEjT0Xj3d3777KfE0xl2zm0ogezpfN3Gss';
-        
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
         const LINK_DO_STRIPE = "https://buy.stripe.com/test_28E4gB89g0EN075gaqcs800"; 
 
-        // --- LÓGICA (Igual à anterior) ---
+        // --- FUNÇÃO DO OLHINHO ---
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const eyeSvg = document.getElementById('eyeSvg');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                // Muda ícone para "olho fechado"
+                eyeSvg.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M1 1l22 22"></path><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>';
+            } else {
+                passwordInput.type = 'password';
+                // Muda ícone para "olho aberto"
+                eyeSvg.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+            }
+        }
+
+        // --- LÓGICA DE CADASTRO ---
         async function criarContaEPagar() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const feedback = document.getElementById('feedback');
 
             if (!email || !password) {
-                feedback.style.color = "#F87171"; // Vermelho claro
+                feedback.style.color = "#F87171";
                 feedback.innerText = "Por favor, preencha todos os campos.";
                 return;
             }
 
-            feedback.style.color = "#8B5CF6"; // Roxo
+            feedback.style.color = "#8B5CF6";
             feedback.innerText = "Criando sua conta...";
 
             const { data, error } = await supabaseClient.auth.signUp({
@@ -197,18 +177,24 @@
             });
 
             if (error) {
-                feedback.style.color = "#F87171";
-                feedback.innerText = "Erro: " + error.message;
+                // Tratamento de erro de e-mail duplicado
+                if (error.message.includes("already registered") || error.message.includes("already exists")) {
+                    feedback.style.color = "#F59E0B"; 
+                    feedback.innerHTML = `⚠️ Esse e-mail já tem conta!<br><a href="login.html" style="color: #F59E0B; font-weight: bold; text-decoration: underline;">Fazer Login</a>`;
+                } else {
+                    feedback.style.color = "#F87171";
+                    feedback.innerText = "Erro: " + error.message;
+                }
             } else {
-                feedback.style.color = "#34D399"; // Verde claro
+                feedback.style.color = "#34D399";
                 feedback.innerText = "Sucesso! Redirecionando...";
-                
                 if (data?.user?.id) {
                     const usuarioId = data.user.id;
                     setTimeout(() => {
                         window.location.href = `${LINK_DO_STRIPE}?client_reference_id=${usuarioId}`;
                     }, 1000);
                 } else {
+                    // Fallback se a confirmação de e-mail estiver ligada
                     feedback.innerText = "Verifique seu e-mail para confirmar!";
                 }
             }
