@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Conta Premium</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f4; }
+        .card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; width: 300px; }
+        input { width: 90%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
+        button { width: 100%; padding: 10px; background-color: #635bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #4b45c6; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>🚀 Criar Conta</h2>
+        <p>Crie sua senha para acessar o painel e ir para o pagamento.</p>
+        
+        <input type="email" id="email" placeholder="Seu melhor e-mail">
+        <input type="password" id="password" placeholder="Crie uma senha segura">
+        
+        <button onclick="criarContaEPagar()">Ir para Pagamento ➔</button>
+        <p id="status" style="color: red; font-size: 12px;"></p>
+    </div>
+
+    <script>
+        // --- CONFIGURAÇÃO ---
+        // 1. Cole aqui a URL e a Chave do seu Supabase (as mesmas que você usa no login.html)
+        const supabaseUrl = 'https://izmdjkalwgupuehrbcxm.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6bWRqa2Fsd2d1cHVlaHJiY3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDkwNTUsImV4cCI6MjA4NTgyNTA1NX0.w3FW5oORqiEjT0Xj3d3777KfE0xl2zm0ogezpfN3Gss'
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey)
+
+        // 2. COLE SEU LINK DO STRIPE AQUI (Aquele https://buy.stripe.com/test_...)
+        const LINK_DO_STRIPE = "https://buy.stripe.com/test_28E4gB89g0EN075gaqcs800"; 
+
+        // --- LÓGICA ---
+        async function criarContaEPagar() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const statusTexto = document.getElementById('status');
+
+            if (!email || !password) {
+                statusTexto.innerText = "Preencha e-mail e senha!";
+                return;
+            }
+
+            statusTexto.innerText = "Criando conta...";
+
+            // 1. Cria usuário no Supabase
+            const { data, error } = await supabase.auth.signUp({
+                email: email,
+                password: password
+            });
+
+            if (error) {
+                statusTexto.innerText = "Erro: " + error.message;
+            } else {
+                // 2. SUCESSO! Pega o ID e manda pro Stripe
+                const usuarioId = data.user.id;
+                statusTexto.innerText = "Redirecionando para o pagamento...";
+                
+                // Monta o link mágico com o ID
+                window.location.href = `${LINK_DO_STRIPE}?client_reference_id=${usuarioId}`;
+            }
+        }
+    </script>
+</body>
+</html>
