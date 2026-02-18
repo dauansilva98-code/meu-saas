@@ -28,13 +28,14 @@
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO ---
+        // --- SUAS CHAVES REAIS (Já preenchidas) ---
         const supabaseUrl = 'https://izmdjkalwgupuehrbcxm.supabase.co'
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6bWRqa2Fsd2d1cHVlaHJiY3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDkwNTUsImV4cCI6MjA4NTgyNTA1NX0.w3FW5oORqiEjT0Xj3d3777KfE0xl2zm0ogezpfN3Gss'
         
-        // CORREÇÃO AQUI: Mudei o nome para 'supabaseClient' para não dar conflito
+        // CORREÇÃO: Usando 'supabaseClient' para não dar erro no navegador
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey)
 
+        // SEU LINK DO STRIPE
         const LINK_DO_STRIPE = "https://buy.stripe.com/test_28E4gB89g0EN075gaqcs800"; 
 
         // --- LÓGICA ---
@@ -51,7 +52,7 @@
             statusTexto.style.color = "blue";
             statusTexto.innerText = "Criando conta...";
 
-            // CORREÇÃO AQUI: Usando 'supabaseClient'
+            // 1. Cria usuário usando o cliente corrigido
             const { data, error } = await supabaseClient.auth.signUp({
                 email: email,
                 password: password
@@ -60,13 +61,21 @@
             if (error) {
                 statusTexto.style.color = "red";
                 statusTexto.innerText = "Erro: " + error.message;
+                console.error(error); // Mostra o erro real no console se houver
             } else {
-                const usuarioId = data.user.id;
+                // 2. SUCESSO!
                 statusTexto.style.color = "green";
-                statusTexto.innerText = "Redirecionando para o pagamento...";
+                statusTexto.innerText = "Sucesso! Redirecionando...";
                 
-                // Manda para o Stripe
-                window.location.href = `${LINK_DO_STRIPE}?client_reference_id=${usuarioId}`;
+                // Se o cadastro funcionou, mas o usuário já existe, o Supabase não retorna user.id às vezes.
+                // Mas assumindo conta nova:
+                if (data?.user?.id) {
+                    const usuarioId = data.user.id;
+                    window.location.href = `${LINK_DO_STRIPE}?client_reference_id=${usuarioId}`;
+                } else {
+                    // Caso o usuário tenha acabado de confirmar email ou algo assim
+                    statusTexto.innerText = "Verifique seu e-mail para confirmar o cadastro!";
+                }
             }
         }
     </script>
