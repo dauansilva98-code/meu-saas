@@ -24,17 +24,17 @@
         <input type="password" id="password" placeholder="Crie uma senha segura">
         
         <button onclick="criarContaEPagar()">Ir para Pagamento ➔</button>
-        <p id="status" style="color: red; font-size: 12px;"></p>
+        <p id="status" style="color: red; font-size: 12px; margin-top: 10px;"></p>
     </div>
 
     <script>
         // --- CONFIGURAÇÃO ---
-        // 1. Cole aqui a URL e a Chave do seu Supabase (as mesmas que você usa no login.html)
         const supabaseUrl = 'https://izmdjkalwgupuehrbcxm.supabase.co'
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6bWRqa2Fsd2d1cHVlaHJiY3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDkwNTUsImV4cCI6MjA4NTgyNTA1NX0.w3FW5oORqiEjT0Xj3d3777KfE0xl2zm0ogezpfN3Gss'
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey)
+        
+        // CORREÇÃO AQUI: Mudei o nome para 'supabaseClient' para não dar conflito
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey)
 
-        // 2. COLE SEU LINK DO STRIPE AQUI (Aquele https://buy.stripe.com/test_...)
         const LINK_DO_STRIPE = "https://buy.stripe.com/test_28E4gB89g0EN075gaqcs800"; 
 
         // --- LÓGICA ---
@@ -48,22 +48,24 @@
                 return;
             }
 
+            statusTexto.style.color = "blue";
             statusTexto.innerText = "Criando conta...";
 
-            // 1. Cria usuário no Supabase
-            const { data, error } = await supabase.auth.signUp({
+            // CORREÇÃO AQUI: Usando 'supabaseClient'
+            const { data, error } = await supabaseClient.auth.signUp({
                 email: email,
                 password: password
             });
 
             if (error) {
+                statusTexto.style.color = "red";
                 statusTexto.innerText = "Erro: " + error.message;
             } else {
-                // 2. SUCESSO! Pega o ID e manda pro Stripe
                 const usuarioId = data.user.id;
+                statusTexto.style.color = "green";
                 statusTexto.innerText = "Redirecionando para o pagamento...";
                 
-                // Monta o link mágico com o ID
+                // Manda para o Stripe
                 window.location.href = `${LINK_DO_STRIPE}?client_reference_id=${usuarioId}`;
             }
         }
