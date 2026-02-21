@@ -8,7 +8,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Organizador Financeiro Pro</title>
@@ -146,18 +145,29 @@
     </style>
 </head>
 <body class="pb-12 container-padding">
-    <button onclick="sair()" style="position: fixed; top: 20px; right: 20px; background-color: #ef4444; color: white; padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; z-index: 1000;">
-    Sair do Sistema
-</button>
 
     <div class="max-w-7xl mx-auto">
-        <header class="mb-6 sticky top-0 bg-slate-50 z-50 pt-4 pb-2 no-print flex flex-col md:flex-row items-center justify-between">
-            <div class="w-full md:w-1/3"></div> <div class="w-full md:w-1/3 text-center">
-                <h1 class="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">Organizador Financeiro Pro</h1>
+        
+        <header class="mb-6 sticky top-0 bg-slate-50/90 backdrop-blur-sm z-50 py-3 no-print border-b border-slate-200 flex items-center justify-between px-2 sm:px-0">
+            <div class="flex items-center">
+                <h1 class="text-lg md:text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
+                    <i data-lucide="trending-up" class="w-6 h-6 text-indigo-600"></i>
+                    <span class="hidden sm:inline">Organizador Financeiro Pro</span>
+                    <span class="sm:hidden">Org. Financeiro</span>
+                </h1>
             </div>
 
-            <div class="w-full md:w-1/3 flex justify-end px-4 mt-2 md:mt-0">
-                </div>
+            <div class="flex items-center gap-2 sm:gap-4">
+                <a href="COLE_SEU_LINK_DO_PORTAL_AQUI" target="_blank" class="flex items-center gap-1 text-[11px] sm:text-xs font-bold text-indigo-700 bg-indigo-100/50 px-2 sm:px-3 py-2 rounded-lg hover:bg-indigo-200 transition-colors border border-indigo-200">
+                    <i data-lucide="credit-card" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Assinatura</span>
+                </a>
+                
+                <button onclick="sair()" class="flex items-center gap-1 text-[11px] sm:text-xs font-bold text-rose-700 bg-rose-100/50 px-2 sm:px-3 py-2 rounded-lg hover:bg-rose-200 transition-colors border border-rose-200">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Sair</span>
+                </button>
+            </div>
         </header>
         
         <div class="tabs-container mb-6 px-2 no-print">
@@ -417,16 +427,9 @@
     <div id="toast" class="toast">Mensagem aqui</div>
 
     <script>
-        // CONFIGURAÇÃO DO SUPABASE (COLOQUE SUAS CHAVES AQUI)
-        // Eu já preenchi a URL correta baseada no seu Print do Project ID!
         const supabaseUrl = 'https://izmdjkalwgupuehrbcxm.supabase.co'; 
-        
-        // --- COLOQUE A CHAVE ABAIXO ---
-        // Pegue a chave da aba "Legacy anon" no Supabase e cole dentro das aspas.
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6bWRqa2Fsd2d1cHVlaHJiY3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDkwNTUsImV4cCI6MjA4NTgyNTA1NX0.w3FW5oORqiEjT0Xj3d3777KfE0xl2zm0ogezpfN3Gss';   
 
-        // --- INICIALIZAÇÃO SEGURA DO SUPABASE ---
-        // Renomeei para _supabase para não conflitar com a biblioteca
         let _supabase = null;
         try {
             if (typeof supabase !== 'undefined') {
@@ -438,7 +441,6 @@
             console.error("Erro ao iniciar Supabase. Verifique as chaves.", err);
         }
 
-        // --- HELPER FUNCTION FOR SAFE ID GENERATION ---
         function generateId() {
             if (typeof crypto !== 'undefined' && crypto.randomUUID) {
                 return crypto.randomUUID();
@@ -446,7 +448,6 @@
             return 'id-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now().toString(36);
         }
 
-        // --- ESTADO ---
         let incomes = [{ id: generateId(), label: 'Salário Principal', value: 5000 }];
         let categories = [
             { id: 'cat-fixa', label: 'Contas Fixas', percent: 50, color: '#3b82f6' },
@@ -463,10 +464,8 @@
 
         const formatCurrency = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
-        // --- FUNÇÕES DE NUVEM (ASSÍNCRONAS E SEGURAS) ---
-
         async function saveData() {
-            if (!_supabase) return; // Não trava se a biblioteca falhar
+            if (!_supabase) return; 
 
             try {
                 const { data: { user } } = await _supabase.auth.getUser();
@@ -548,14 +547,12 @@
             if(targetView) targetView.classList.remove('hidden');
             if(targetBtn) targetBtn.classList.add('tab-active');
             
-            // Correção visual: Redesenha os gráficos ao trocar de aba para evitar bugs
             if(tab === 'dashboard' && financeChart) financeChart.update();
             if(tab === 'investments' && investChart) investChart.update();
             
             updateUI(true, true);
         }
 
-        // --- Adicionar/Remover ---
         function addIncomeRow() { incomes.unshift({ id: generateId(), label: 'Nova Renda', value: 0 }); updateWholeScreen(); triggerSave(); }
         function addBillRow() { bills.unshift({ id: generateId(), label: 'Nova Conta', value: 0, categoryId: categories[0].id }); updateWholeScreen(); triggerSave(); }
         function addInvestmentRow() { investments.unshift({ id: generateId(), asset: '', institution: '', type: 'Renda Fixa', value: 0 }); updateWholeScreen(); triggerSave(); }
@@ -602,7 +599,6 @@
             } 
         }
 
-        // --- Renderização ---
         function renderIncomes() {
             const container = document.getElementById('incomeList');
             if(!container) return;
@@ -818,7 +814,6 @@
             });
         }
 
-        // --- FUNÇÃO DE SEGURANÇA MÁXIMA ---
         async function verificarAssinatura() {
             if (!_supabase) return true; 
             
@@ -843,22 +838,23 @@
         }
 
         window.onload = async () => { 
-            // 1. O Segurança confere a assinatura ANTES de mostrar os dados
             const temAcesso = await verificarAssinatura(); 
-
-            // 2. Se tiver acesso, carrega os gráficos e cálculos normalmente!
             if (temAcesso) {
+                lucide.createIcons(); // Carrega os ícones no topo
                 initCharts(); 
                 updateWholeScreen(); 
                 await loadData();
             }
         };
-    </script>
-    <script>
-      function sair() {
-        localStorage.removeItem("logado");
-        window.location.href = "login.html";
-      }
+
+        // --- NOVA FUNÇÃO DE SAIR (FECHA O BANCO DE DADOS DE VERDADE) ---
+        async function sair() {
+            if (_supabase) {
+                await _supabase.auth.signOut(); // Desloga do servidor
+            }
+            localStorage.removeItem("logado"); // Limpa o navegador
+            window.location.href = "login.html"; // Joga pra rua
+        }
     </script>
 </body>
 </html>

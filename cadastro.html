@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assinar Premium | Joyful Pitch</title>
+    <title>Assinar Premium | Organizador Financeiro Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
@@ -12,7 +12,7 @@
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
-            padding: 0;
+            padding: 20px; /* Adicionado padding para garantir que nunca encoste nas bordas do celular */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -20,6 +20,7 @@
             background-color: #1A1B2E;
             background: radial-gradient(circle at top center, #2A2B4E 0%, #1A1B2E 100%);
             color: #fff;
+            box-sizing: border-box; /* Garante que o padding não aumente o tamanho da tela */
         }
 
         /* --- O CARTÃO (CARD) --- */
@@ -33,13 +34,14 @@
             max-width: 400px;
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            box-sizing: border-box; /* Fundamental para telas pequenas */
         }
 
         h2 { color: #fff; margin: 0 0 12px 0; font-size: 28px; font-weight: 700; }
         p.subtitle { color: #A0AEC0; font-size: 15px; margin-bottom: 36px; line-height: 1.5; }
 
         /* --- INPUTS E LABEL --- */
-        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group { margin-bottom: 20px; text-align: left; width: 100%; }
         label { display: block; font-size: 13px; font-weight: 600; color: #E2E8F0; margin-bottom: 8px; }
 
         /* Container para posicionar o olhinho */
@@ -47,12 +49,13 @@
             position: relative;
             display: flex;
             align-items: center;
+            width: 100%;
         }
 
         input {
             width: 100%;
             padding: 14px 16px;
-            padding-right: 45px; /* Espaço extra para o ícone não ficar em cima do texto */
+            padding-right: 45px; 
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
@@ -77,6 +80,8 @@
             cursor: pointer;
             color: #A0AEC0;
             transition: color 0.2s;
+            display: flex; /* Melhora alinhamento vertical */
+            align-items: center;
         }
         .eye-icon:hover { color: #fff; }
 
@@ -94,6 +99,7 @@
             margin-top: 24px;
             transition: all 0.3s ease;
             box-shadow: 0 10px 15px -3px rgba(109, 40, 217, 0.4);
+            box-sizing: border-box;
         }
         button:hover { filter: brightness(1.15); transform: translateY(-2px); }
 
@@ -101,6 +107,25 @@
         .link-login { margin-top: 28px; display: block; font-size: 14px; color: #A0AEC0; text-decoration: none; }
         .link-login:hover { color: #8B5CF6; }
         .link-login b { color: #fff; }
+
+        /* --- RESPONSIVIDADE PARA CELULARES --- */
+        @media (max-width: 480px) {
+            .card {
+                padding: 30px 20px; /* Reduz o espaçamento interno para caber em telas menores */
+            }
+            h2 {
+                font-size: 24px; /* Título um pouco menor no celular */
+            }
+            p.subtitle {
+                font-size: 14px;
+            }
+            input {
+                font-size: 16px; /* Mantém 16px para evitar que o iOS dê zoom automático ao clicar no input */
+            }
+            button {
+                padding: 14px;
+            }
+        }
     </style>
 </head>
 <body>
