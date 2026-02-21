@@ -755,13 +755,17 @@
 
             if (!isPartial) renderCategories();
 
-            const meta12 = totalBills * 12;
+            // CORREÇÃO: Puxar apenas o valor das "Contas Fixas" para a Meta da Reserva
+            const contasFixasIds = categories.filter(c => c.label.toLowerCase().includes('fixa')).map(c => c.id);
+            const totalContasFixas = bills.filter(b => contasFixasIds.includes(b.categoryId)).reduce((a, b) => a + b.value, 0);
+
+            const meta12 = totalContasFixas * 12;
             const prog = meta12 > 0 ? Math.min(100, (totalReserve / meta12) * 100) : 0;
             const missing = Math.max(0, meta12 - totalReserve);
             
             const r6 = document.getElementById('reserve6');
             const r12 = document.getElementById('reserve12');
-            if(r6) r6.innerText = formatCurrency(totalBills * 6);
+            if(r6) r6.innerText = formatCurrency(totalContasFixas * 6);
             if(r12) r12.innerText = formatCurrency(meta12);
             
             document.getElementById('reserveProgressPercent').innerText = Math.round(prog) + '%';
@@ -840,20 +844,19 @@
         window.onload = async () => { 
             const temAcesso = await verificarAssinatura(); 
             if (temAcesso) {
-                lucide.createIcons(); // Carrega os ícones no topo
+                lucide.createIcons(); 
                 initCharts(); 
                 updateWholeScreen(); 
                 await loadData();
             }
         };
 
-        // --- NOVA FUNÇÃO DE SAIR (FECHA O BANCO DE DADOS DE VERDADE) ---
         async function sair() {
             if (_supabase) {
-                await _supabase.auth.signOut(); // Desloga do servidor
+                await _supabase.auth.signOut(); 
             }
-            localStorage.removeItem("logado"); // Limpa o navegador
-            window.location.href = "login.html"; // Joga pra rua
+            localStorage.removeItem("logado"); 
+            window.location.href = "login.html"; 
         }
     </script>
 </body>
