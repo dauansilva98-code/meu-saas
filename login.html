@@ -186,14 +186,33 @@
         btn.disabled = true;
 
         try {
-            const { error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+            // 1. Tenta fazer o login
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+            
             if (error) {
                 alert("Erro ao entrar: " + error.message);
                 btn.innerHTML = originalContent;
                 btn.disabled = false;
-            } else {
+                return;
+            }
+
+            // 2. Login ok! Verifica se o status do perfil é 'active'
+            const userId = data.user.id;
+            const { data: profile } = await supabaseClient
+                .from('profiles')
+                .select('subscription_status')
+                .eq('id', userId)
+                .single();
+
+            if (profile && profile.subscription_status === 'active') {
                 localStorage.setItem("logado", "sim");
                 window.location.href = "index.html"; 
+            } else {
+                // Se não pagou, manda para o Stripe
+                alert("Identificamos que sua assinatura ainda não está ativa. Redirecionando para o pagamento...");
+                window.location.href = `https://buy.stripe.com/test_28E4gB89g0EN075gaqcs800?client_reference_id=${userId}`;
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
             }
         } catch (err) {
             alert("Erro de conexão com o servidor.");

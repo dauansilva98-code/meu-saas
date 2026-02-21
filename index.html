@@ -818,11 +818,40 @@
             });
         }
 
+        // --- FUNÇÃO DE SEGURANÇA MÁXIMA ---
+        async function verificarAssinatura() {
+            if (!_supabase) return true; 
+            
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (!user) {
+                sair(); 
+                return false;
+            }
+
+            const { data: profile } = await _supabase
+                .from('profiles')
+                .select('subscription_status')
+                .eq('id', user.id)
+                .single();
+
+            if (!profile || profile.subscription_status !== 'active') {
+                alert("Acesso restrito para assinantes. Ative sua conta!");
+                window.location.href = `https://buy.stripe.com/test_28E4gB89g0EN075gaqcs800?client_reference_id=${user.id}`;
+                return false;
+            }
+            return true;
+        }
+
         window.onload = async () => { 
-            initCharts(); 
-            updateWholeScreen(); 
-            // Carrega dados e atualiza de novo
-            await loadData();
+            // 1. O Segurança confere a assinatura ANTES de mostrar os dados
+            const temAcesso = await verificarAssinatura(); 
+
+            // 2. Se tiver acesso, carrega os gráficos e cálculos normalmente!
+            if (temAcesso) {
+                initCharts(); 
+                updateWholeScreen(); 
+                await loadData();
+            }
         };
     </script>
     <script>
