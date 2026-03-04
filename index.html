@@ -1,863 +1,1342 @@
-<script>
-  // Proteção: Se não estiver logado, expulsa para o login imediatamente
-  if (localStorage.getItem("logado") !== "sim") {
-    window.location.href = "login.html";
-  }
-</script>
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Organizador Financeiro Pro</title>
+    
+    <!-- Proteção: Se não estiver logado, expulsa para o login -->
+    <script>
+        try {
+            if (localStorage.getItem("logado") !== "sim") {
+                // Previne erro de redirecionamento no ambiente de preview/sandbox
+                if (window.location.protocol !== 'about:' && window.location.protocol !== 'data:' && window.location.hostname !== '') {
+                    window.location.href = "login.html";
+                } else {
+                    console.log("Ambiente de preview detectado. Simulando login para testes...");
+                    localStorage.setItem("logado", "sim");
+                }
+            }
+        } catch (e) {
+            console.error("Erro ao verificar login:", e);
+        }
+    </script>
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel (Para rodar o JSX/React direto no navegador) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Dependências do Recharts -->
+    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+    <script src="https://unpkg.com/react-is@18.2.0/umd/react-is.production.min.js"></script>
+
+    <!-- Recharts (Versão fixada para estabilidade via CDN) -->
+    <script src="https://unpkg.com/recharts@2.1.9/umd/Recharts.js"></script>
+    
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
-        
-        .card { background: white; border-radius: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-        .btn-primary { background-color: #3b82f6; color: white; padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s; border: none; cursor: pointer; }
-        .btn-primary:hover { background-color: #2563eb; }
-        
-        /* Menu Centralizado e Estilizado */
-        .tabs-container { display: flex; justify-content: center; gap: 1.5rem; border-bottom: 1px solid #e2e8f0; }
-        .tab-button { 
-            padding: 0.75rem 0.5rem; 
-            font-size: 0.875rem; 
-            color: #64748b; 
-            border-bottom: 2px solid transparent; 
-            transition: all 0.2s; 
-            font-weight: 400;
-            background: none;
-            cursor: pointer;
-        }
-        .tab-active { 
-            border-bottom: 2px solid #3b82f6; 
-            color: #3b82f6; 
-            font-weight: 700 !important; 
-        }
-        
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        input, select { font-size: 16px !important; } 
-        
-        /* Ajuste para inputs numéricos */
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; 
-            margin: 0; 
-        }
-        
-        @media (max-width: 640px) {
-            .container-padding { padding: 1rem; }
-            .card-padding { padding: 1rem; }
-            .tabs-container { gap: 0.75rem; }
-        }
-
-        #reserveProgressBarContainer {
-            border: none;
-            background-color: #f1f5f9;
-        }
-
-        .delete-btn {
-            color: #ef4444;
-            padding: 4px;
-            border-radius: 6px;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: transparent;
-            border: none;
-            cursor: pointer;
-        }
-        .delete-btn:hover {
-            background-color: #fee2e2;
-            transform: scale(1.1);
-        }
-
-        input[type=range] {
-            cursor: pointer;
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-        }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 6px;
-            background: #e2e8f0;
-            border-radius: 3px;
-        }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 18px;
-            width: 18px;
-            border-radius: 50%;
-            background: #3b82f6;
-            margin-top: -6px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        /* Estilos de Impressão */
-        @media print {
-            .no-print { display: none !important; }
-            body { background-color: white; padding: 0; }
-            .card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; margin-bottom: 20px; }
-            .container-padding { padding: 0; }
-            input, select { border: none !important; background: transparent !important; -webkit-appearance: none; }
-            /* Esconder ícones de delete na impressão */
-            .delete-btn { display: none; }
-        }
-
-        /* Toast Notification Animation */
-        .toast {
-            visibility: hidden;
-            min-width: 250px;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 8px;
-            padding: 12px;
-            position: fixed;
-            z-index: 100;
-            left: 50%;
-            bottom: 30px;
-            transform: translateX(-50%);
-            font-size: 14px;
-            opacity: 0;
-            transition: opacity 0.3s, bottom 0.3s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .toast.show {
-            visibility: visible;
-            opacity: 1;
-            bottom: 50px;
-        }
-        
-        .toast-success { background-color: #10b981; }
-        .toast-danger { background-color: #ef4444; }
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
-<body class="pb-12 container-padding">
+<body>
+    <div id="root"></div>
 
-    <div class="max-w-7xl mx-auto">
-        
-        <header class="mb-6 sticky top-0 bg-slate-50/90 backdrop-blur-sm z-50 py-3 no-print border-b border-slate-200 flex items-center justify-between px-2 sm:px-0">
-            <div class="flex items-center">
-                <h1 class="text-lg md:text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
-                    <i data-lucide="trending-up" class="w-6 h-6 text-indigo-600"></i>
-                    <span class="hidden sm:inline">Organizador Financeiro Pro</span>
-                    <span class="sm:hidden">Org. Financeiro</span>
-                </h1>
-            </div>
+    <script type="text/babel">
+        // Extraindo React e Recharts das bibliotecas globais
+        const { useState, useEffect, useMemo } = React;
+        const { PieChart, Pie, Cell, ResponsiveContainer, Tooltip: RechartsTooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } = window.Recharts;
 
-            <div class="flex items-center gap-2 sm:gap-4">
-                <a href="COLE_SEU_LINK_DO_PORTAL_AQUI" target="_blank" class="flex items-center gap-1 text-[11px] sm:text-xs font-bold text-indigo-700 bg-indigo-100/50 px-2 sm:px-3 py-2 rounded-lg hover:bg-indigo-200 transition-colors border border-indigo-200">
-                    <i data-lucide="credit-card" class="w-4 h-4"></i>
-                    <span class="hidden sm:inline">Assinatura</span>
-                </a>
-                
-                <button onclick="sair()" class="flex items-center gap-1 text-[11px] sm:text-xs font-bold text-rose-700 bg-rose-100/50 px-2 sm:px-3 py-2 rounded-lg hover:bg-rose-200 transition-colors border border-rose-200">
-                    <i data-lucide="log-out" class="w-4 h-4"></i>
-                    <span class="hidden sm:inline">Sair</span>
-                </button>
-            </div>
-        </header>
-        
-        <div class="tabs-container mb-6 px-2 no-print">
-            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-button tab-active">Planejamento</button>
-            <button onclick="switchTab('investments')" id="tab-investments" class="tab-button">Investimentos</button>
-            <button onclick="switchTab('history')" id="tab-history" class="tab-button">Reserva e Histórico</button>
-        </div>
-
-        <div class="hidden print:block text-center mb-8 pt-4">
-            <h1 class="text-2xl font-bold text-slate-900">Relatório Financeiro</h1>
-            <p class="text-sm text-slate-500" id="printDate"></p>
-        </div>
-
-        <div id="view-dashboard" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div class="lg:col-span-4 space-y-6">
-                <div class="card card-padding p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-slate-800 text-xs uppercase tracking-widest">Minhas Rendas</h3>
-                        <button onclick="addIncomeRow()" class="text-[10px] btn-primary px-2 py-1 no-print">+ Adicionar</button>
-                    </div>
-                    <div id="incomeList" class="space-y-3"></div>
-                    <div class="mt-4 pt-3 border-t flex justify-between items-end">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase">Total Recebido:</span>
-                        <span id="totalIncomeDisplay" class="text-xl font-black text-emerald-600">R$ 0,00</span>
-                    </div>
-                </div>
-
-                <div class="card card-padding p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-slate-800 text-xs uppercase tracking-widest">Definição de Metas (%)</h3>
-                        <button onclick="addCategory()" class="text-[10px] btn-primary px-2 py-1 no-print">+ Nova Meta</button>
-                    </div>
-                    <div id="expenseSliders" class="space-y-6"></div>
-                    <div class="mt-6 pt-4 border-t">
-                        <div class="flex justify-between text-[10px] font-bold uppercase mb-2">
-                            <span class="text-slate-500">Uso do Orçamento</span>
-                            <span id="totalPercentIndicator">0%</span>
-                        </div>
-                        <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden mb-2">
-                            <div id="totalProgressBar" class="h-full transition-all bg-blue-500" style="width: 0%"></div>
-                        </div>
-                        <p class="text-[10px] text-slate-400 text-center italic">
-                            A soma das metas deve ser no máximo 100%
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="lg:col-span-4 space-y-6">
-                <div class="card card-padding p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-slate-800 text-xs uppercase tracking-widest">Custo de Vida</h3>
-                        <button onclick="addBillRow()" class="text-[10px] btn-primary px-2 py-1 no-print">+ Conta</button>
-                    </div>
-                    <div id="billsList" class="space-y-4"></div>
-                    <div class="mt-6 pt-4 border-t space-y-3">
-                        <div class="flex justify-between items-center px-1">
-                            <span class="text-[10px] font-bold text-slate-500 uppercase">Total Gastos:</span>
-                            <span id="totalBillsDisplay" class="text-lg font-bold text-rose-600">R$ 0,00</span>
-                        </div>
-                        <div class="flex justify-between items-center px-1 pt-2">
-                            <span class="text-[10px] font-bold uppercase text-slate-400">Saldo Sobrando:</span>
-                            <span id="remainingBalanceDisplay" class="text-xl font-black text-emerald-500">R$ 0,00</span>
-                        </div>
-                        <div class="px-1 text-center no-print">
-                            <p class="text-[10px] text-slate-400 leading-relaxed italic">
-                                O saldo livre é o que sobra da sua renda após pagar todas as contas listadas acima.
-                            </p>
-                        </div>
-                        <button onclick="saveMonthToHistory()" class="w-full text-xs font-bold py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 uppercase shadow-lg shadow-blue-200 transition-colors cursor-pointer no-print">Fechar Mês e Salvar</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="lg:col-span-4 space-y-6">
-                <div class="card card-padding p-6">
-                    <h3 class="text-center text-[10px] font-bold text-slate-400 uppercase mb-4">Distribuição Planejada</h3>
-                    <div class="relative h-64 w-full">
-                        <canvas id="financeChart"></canvas>
-                    </div>
-                </div>
-                <div class="card card-padding p-6">
-                    <h3 class="text-[10px] font-bold text-slate-800 uppercase mb-4">Alertas de Categoria</h3>
-                    <div id="diagnoseList" class="space-y-3"></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="view-investments" class="hidden space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <div class="lg:col-span-8 space-y-6">
-                    <div class="card card-padding p-6 overflow-hidden">
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="font-bold text-slate-800 text-xs uppercase tracking-widest">Meus Ativos</h3>
-                            <button onclick="addInvestmentRow()" class="text-[10px] btn-primary no-print">+ Novo Ativo</button>
-                        </div>
-                        <div class="overflow-x-auto -mx-6 px-6 no-scrollbar">
-                            <table class="w-full text-left text-sm min-w-[500px]">
-                                <thead class="text-slate-400 uppercase text-[10px] border-b border-slate-100">
-                                    <tr>
-                                        <th class="pb-3">Ativo</th>
-                                        <th class="pb-3">Instituição</th>
-                                        <th class="pb-3">Tipo</th>
-                                        <th class="pb-3 text-right">Valor</th>
-                                        <th class="pb-3"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="investmentTableBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="card card-padding p-6 bg-blue-50 border-blue-100 no-print">
-                        <div class="flex items-center gap-2 mb-4">
-                            <i data-lucide="graduation-cap" class="w-5 h-5 text-blue-600"></i>
-                            <h3 class="font-bold text-blue-900 text-xs uppercase tracking-widest">Aprenda antes de Investir</h3>
-                        </div>
-                        <p class="text-xs text-blue-800 mb-4 leading-relaxed">
-                            Investir sem conhecimento é como dirigir no escuro. Antes de aportar seu dinheiro, entenda o risco de cada ativo e nunca invista em algo que você não compreende como funciona.
-                        </p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="bg-white p-3 rounded-lg shadow-sm border border-blue-100">
-                                <h4 class="text-[10px] font-black uppercase text-blue-600 mb-1">1. Reserva Primeiro</h4>
-                                <p class="text-[10px] text-slate-600">Garanta sua reserva de emergência antes de ir para a bolsa de valores.</p>
-                            </div>
-                            <div class="bg-white p-3 rounded-lg shadow-sm border border-blue-100">
-                                <h4 class="text-[10px] font-black uppercase text-blue-600 mb-1">2. Diversificação</h4>
-                                <p class="text-[10px] text-slate-600">"Não coloque todos os ovos na mesma cesta". Divida entre Renda Fixa e Variável.</p>
-                            </div>
-                            <div class="bg-white p-3 rounded-lg shadow-sm border border-blue-100">
-                                <h4 class="text-[10px] font-black uppercase text-blue-600 mb-1">3. Foco no Longo Prazo</h4>
-                                <p class="text-[10px] text-slate-600">Investimentos servem para multiplicar patrimônio no tempo, não para "ficar rico rápido".</p>
-                            </div>
-                            <div class="bg-white p-3 rounded-lg shadow-sm border border-blue-100">
-                                <h4 class="text-[10px] font-black uppercase text-blue-600 mb-1">4. Estude Taxas e IR</h4>
-                                <p class="text-[10px] text-slate-600">Taxas de administração e impostos podem "comer" boa parte da sua rentabilidade.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="lg:col-span-4 space-y-6">
-                    <div class="card card-padding p-6 bg-slate-900 text-white">
-                        <div class="mb-4">
-                            <h3 class="text-[10px] font-bold uppercase text-slate-400 mb-1">Reserva de Emergência</h3>
-                            <div id="totalOnlyReserveDisplay" class="text-2xl font-black text-blue-400">R$ 0,00</div>
-                        </div>
-                        <div class="pt-4 border-t border-slate-800">
-                            <h3 class="text-[10px] font-bold uppercase text-slate-400 mb-1">Total em Investimentos</h3>
-                            <div id="totalOnlyInvestedDisplay" class="text-2xl font-black text-emerald-400">R$ 0,00</div>
-                        </div>
-                        <div class="mt-4 pt-4 border-t border-slate-800 flex justify-between items-end">
-                            <span class="text-[9px] font-bold uppercase text-slate-500">Patrimônio Líquido</span>
-                            <span id="totalCombinedDisplay" class="text-sm font-bold text-slate-300">R$ 0,00</span>
-                        </div>
-                    </div>
-                    <div class="card card-padding p-6">
-                        <h3 class="text-center text-[10px] font-bold text-slate-400 uppercase mb-4">Alocação por Tipo</h3>
-                        <div class="h-56">
-                            <canvas id="investChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="view-history" class="hidden space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <div class="lg:col-span-5 space-y-6">
-                    <div class="card card-padding p-6 h-fit">
-                        <h3 class="font-bold text-blue-600 text-xs uppercase tracking-widest mb-4">Meta de Segurança</h3>
-                        <div class="space-y-6">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="bg-slate-50 p-4 rounded-xl">
-                                    <span class="text-[9px] font-bold text-slate-400 uppercase">Segurança (6 meses)</span>
-                                    <div id="reserve6" class="text-sm md:text-lg font-bold text-slate-700">R$ 0,00</div>
-                                </div>
-                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                    <span class="text-[9px] font-bold text-blue-400 uppercase">Ideal (12 meses)</span>
-                                    <div id="reserve12" class="text-sm md:text-lg font-bold text-blue-700">R$ 0,00</div>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <div class="flex justify-between mb-2 items-end">
-                                    <div class="flex flex-col">
-                                        <span class="text-[10px] font-bold uppercase text-slate-500">Progresso Atual</span>
-                                        <span id="reserveComparisonText" class="text-[9px] text-slate-400 font-medium tracking-tight italic">R$ 0 / R$ 0</span>
-                                    </div>
-                                    <div class="text-right">
-                                        <span id="reserveProgressPercent" class="text-xs font-black text-blue-600">0%</span>
-                                        <div id="reserveMissingLabel" class="text-[9px] font-bold text-rose-400 uppercase">Falta: R$ 0,00</div>
-                                    </div>
-                                </div>
-                                <div id="reserveProgressBarContainer" class="w-full h-10 rounded-xl overflow-hidden relative shadow-inner">
-                                    <div id="reserveProgressBar" class="h-full bg-blue-500 transition-all duration-700" style="width: 0%"></div>
-                                    <div id="reserveProgressBarText" class="absolute inset-0 flex items-center justify-center text-[10px] font-black text-slate-700 drop-shadow-sm">R$ 0,00</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card card-padding p-6">
-                        <h3 class="font-bold text-slate-800 text-xs uppercase tracking-widest mb-4">O que é a Reserva?</h3>
-                        <div class="space-y-4">
-                            <div class="flex gap-3">
-                                <div class="bg-blue-100 p-2 h-fit rounded-lg text-blue-600">
-                                    <i data-lucide="shield-check" class="w-4 h-4"></i>
-                                </div>
-                                <div>
-                                    <h4 class="text-xs font-bold text-slate-700">Para que serve?</h4>
-                                    <p class="text-[11px] text-slate-500 leading-relaxed">Cobre imprevistos como demissão, problemas de saúde ou consertos urgentes sem precisar de empréstimos.</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-3">
-                                <div class="bg-amber-100 p-2 h-fit rounded-lg text-amber-600">
-                                    <i data-lucide="help-circle" class="w-4 h-4"></i>
-                                </div>
-                                <div>
-                                    <h4 class="text-xs font-bold text-slate-700">Quanto guardar?</h4>
-                                    <p class="text-[11px] text-slate-500 leading-relaxed">O ideal é ter entre 6 e 12 meses do seu <strong>custo de vida atual</strong> (total de gastos) guardado.</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-3">
-                                <div class="bg-emerald-100 p-2 h-fit rounded-lg text-emerald-600">
-                                    <i data-lucide="trending-up" class="w-4 h-4"></i>
-                                </div>
-                                <div>
-                                    <h4 class="text-xs font-bold text-slate-700">Onde investir?</h4>
-                                    <p class="text-[11px] text-slate-500 leading-relaxed">Priorize <strong>Liquidez Diária</strong> (resgate imediato) e <strong>Baixo Risco</strong> (Tesouro Selic, CDB 100% DI).</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="lg:col-span-7 card card-padding p-6">
-                    <h3 class="font-bold text-slate-800 mb-4 text-xs uppercase tracking-widest">Histórico Mensal</h3>
-                    <div class="overflow-x-auto -mx-6 px-6 no-scrollbar">
-                        <table class="w-full text-left text-xs min-w-[450px]">
-                            <thead class="text-slate-400 uppercase text-[9px] border-b border-slate-50">
-                                <tr>
-                                    <th class="py-3">Mês</th>
-                                    <th class="py-3">Renda</th>
-                                    <th class="py-3">Gastos</th>
-                                    <th class="py-3">Sobrou</th>
-                                    <th class="py-3 text-right"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="historyTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="toast" class="toast">Mensagem aqui</div>
-
-    <script>
+        // Configuração do Supabase (Usando suas chaves do código antigo)
         const supabaseUrl = 'https://izmdjkalwgupuehrbcxm.supabase.co'; 
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6bWRqa2Fsd2d1cHVlaHJiY3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDkwNTUsImV4cCI6MjA4NTgyNTA1NX0.w3FW5oORqiEjT0Xj3d3777KfE0xl2zm0ogezpfN3Gss';   
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6bWRqa2Fsd2d1cHVlaHJiY3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDkwNTUsImV4cCI6MjA4NTgyNTA1NX0.w3FW5oORqiEjT0Xj3d3777KfE0xl2zm0ogezpfN3Gss'; 
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        let _supabase = null;
-        try {
-            if (typeof supabase !== 'undefined') {
-                _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-            } else {
-                console.error("A biblioteca do Supabase não carregou.");
-            }
-        } catch (err) {
-            console.error("Erro ao iniciar Supabase. Verifique as chaves.", err);
-        }
-
-        function generateId() {
-            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-                return crypto.randomUUID();
-            }
-            return 'id-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now().toString(36);
-        }
-
-        let incomes = [{ id: generateId(), label: 'Salário Principal', value: 5000 }];
-        let categories = [
-            { id: 'cat-fixa', label: 'Contas Fixas', percent: 50, color: '#3b82f6' },
-            { id: 'cat-lazer', label: 'Lazer e Estilo', percent: 30, color: '#ec4899' },
-            { id: 'cat-inv', label: 'Investimentos', percent: 20, color: '#10b981' }
-        ];
-        let bills = [{ id: generateId(), label: 'Aluguel', value: 1500, categoryId: 'cat-fixa' }];
-        let investments = [
-            { id: 'reserve-id', asset: 'Reserva de Emergência', institution: 'Banco Digital', type: 'Reserva', value: 0 },
-        ];
-        let history = [];
-        let financeChart, investChart;
-        let saveTimeout;
-
-        const formatCurrency = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
-
-        async function saveData() {
-            if (!_supabase) return; 
-
-            try {
-                const { data: { user } } = await _supabase.auth.getUser();
-                if (!user) return; 
-                
-                const dadosParaSalvar = { incomes, categories, bills, investments, history };
-
-                const { error } = await _supabase
-                    .from('dados_financeiros')
-                    .upsert({ 
-                        id: user.id, 
-                        payload: dadosParaSalvar,
-                        updated_at: new Date()
-                    });
-
-                if (error) console.error("Erro Supabase:", error);
-            } catch (err) {
-                console.error("Erro de conexão (Save):", err);
-            }
-        }
-
-        function triggerSave() {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => { saveData(); }, 2000); 
-        }
-
-        async function loadData() {
-            if (!_supabase) return;
-
-            try {
-                const { data: { user } } = await _supabase.auth.getUser();
-                if (!user) return;
-
-                const { data, error } = await _supabase
-                    .from('dados_financeiros')
-                    .select('payload')
-                    .eq('id', user.id)
-                    .single();
-
-                if (data && data.payload) {
-                    const parsed = data.payload;
-                    incomes = parsed.incomes || incomes;
-                    categories = parsed.categories || categories;
-                    bills = parsed.bills || bills;
-                    investments = parsed.investments || investments;
-                    history = parsed.history || history;
-                    
-                    updateWholeScreen(); 
-                    showToast("Sincronizado com a nuvem! ☁️");
-                } 
-            } catch (err) {
-                console.error("Erro ao carregar (Load):", err);
-            }
-        }
-
-        function showToast(message, type = 'success') {
-            const x = document.getElementById("toast");
-            if(x) {
-                x.innerText = message;
-                x.className = "toast show " + (type === 'success' ? 'toast-success' : 'toast-danger');
-                setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
-            }
-        }
-
-        function getRandomColor() {
-            const h = Math.floor(Math.random() * 360);
-            return `hsl(${h}, 70%, 60%)`;
-        }
-
-        function switchTab(tab) {
-            ['dashboard', 'investments', 'history'].forEach(t => {
-                const view = document.getElementById(`view-${t}`);
-                const btn = document.getElementById(`tab-${t}`);
-                if(view) view.classList.add('hidden');
-                if(btn) btn.classList.remove('tab-active');
-            });
-            const targetView = document.getElementById(`view-${tab}`);
-            const targetBtn = document.getElementById(`tab-${tab}`);
-            if(targetView) targetView.classList.remove('hidden');
-            if(targetBtn) targetBtn.classList.add('tab-active');
-            
-            if(tab === 'dashboard' && financeChart) financeChart.update();
-            if(tab === 'investments' && investChart) investChart.update();
-            
-            updateUI(true, true);
-        }
-
-        function addIncomeRow() { incomes.unshift({ id: generateId(), label: 'Nova Renda', value: 0 }); updateWholeScreen(); triggerSave(); }
-        function addBillRow() { bills.unshift({ id: generateId(), label: 'Nova Conta', value: 0, categoryId: categories[0].id }); updateWholeScreen(); triggerSave(); }
-        function addInvestmentRow() { investments.unshift({ id: generateId(), asset: '', institution: '', type: 'Renda Fixa', value: 0 }); updateWholeScreen(); triggerSave(); }
-        
-        function addCategory() {
-            categories.push({ 
-                id: 'cat-' + generateId().substring(0, 8), 
-                label: 'Nova Meta', 
-                percent: 0, 
-                color: getRandomColor()
-            });
-            updateWholeScreen(); 
-            triggerSave();
-        }
-
-        function removeIncome(id) { incomes = incomes.filter(x => x.id !== id); updateWholeScreen(); triggerSave(); }
-        function removeBill(id) { bills = bills.filter(x => x.id !== id); updateWholeScreen(); triggerSave(); }
-        function removeInvestment(id) { investments = investments.filter(x => x.id !== id); updateWholeScreen(); triggerSave(); }
-        function removeCategory(id) { categories = categories.filter(x => x.id !== id); updateWholeScreen(); triggerSave(); }
-
-        function updateIncome(id, f, v) { const i = incomes.find(x => x.id === id); if(i) { i[f] = f === 'value' ? parseFloat(v) || 0 : v; updateUI(); triggerSave(); } }
-        function updateBill(id, f, v) { const b = bills.find(x => x.id === id); if(b) { b[f] = f === 'value' ? parseFloat(v) || 0 : v; updateUI(); triggerSave(); } }
-        function updateInvestment(id, f, v) { const i = investments.find(x => x.id === id); if(i) { i[f] = f === 'value' ? parseFloat(v) || 0 : v; updateUI(); triggerSave(); } }
-        
-        function updateCategoryPerc(id, v) { 
-            const c = categories.find(x => x.id === id); 
-            if(c) { 
-                c.percent = parseInt(v) || 0; 
-                renderCategoriesLabels(); 
-                updateUI(true); 
-                triggerSave(); 
-            } 
-        }
-
-        function updateCategoryLabel(id, v) { 
-            const c = categories.find(x => x.id === id); 
-            if(c) { 
-                c.label = v;
-                if(financeChart) {
-                    const idx = categories.findIndex(cat => cat.id === id);
-                    if(idx !== -1) { financeChart.data.labels[idx] = v; financeChart.update('none'); }
-                }
-                triggerSave(); 
-            } 
-        }
-
-        function renderIncomes() {
-            const container = document.getElementById('incomeList');
-            if(!container) return;
-            if (incomes.length === 0) { container.innerHTML = `<div class="text-center text-slate-400 py-4 text-xs italic">Nenhuma renda cadastrada.</div>`; return; }
-            container.innerHTML = incomes.map(i => `
-                <div class="flex items-center gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                    <input type="text" value="${i.label}" oninput="updateIncome('${i.id}', 'label', this.value)" class="flex-1 text-sm bg-transparent border-none focus:ring-0">
-                    <input type="number" min="0" step="0.01" onfocus="this.select()" value="${i.value}" oninput="updateIncome('${i.id}', 'value', this.value)" class="w-24 text-sm bg-transparent font-bold text-right outline-none">
-                    <button onclick="removeIncome('${i.id}')" class="delete-btn"><i data-lucide="x" class="w-4 h-4"></i></button>
-                </div>`).join('');
-            lucide.createIcons();
-        }
-
-        function renderBills() {
-            const container = document.getElementById('billsList');
-            if(!container) return;
-            if (bills.length === 0) { container.innerHTML = `<div class="text-center text-slate-400 py-4 text-xs italic">Nenhuma conta cadastrada.</div>`; return; }
-            container.innerHTML = bills.map(b => `
-                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2">
-                    <div class="flex justify-between items-center">
-                        <input type="text" value="${b.label}" oninput="updateBill('${b.id}', 'label', this.value)" class="flex-1 text-sm bg-transparent font-medium border-none p-0 focus:ring-0">
-                        <input type="number" min="0" step="0.01" onfocus="this.select()" value="${b.value}" oninput="updateBill('${b.id}', 'value', this.value)" class="w-24 text-sm bg-transparent text-right font-bold text-rose-500 outline-none">
-                        <button onclick="removeBill('${b.id}')" class="delete-btn"><i data-lucide="x" class="w-4 h-4"></i></button>
-                    </div>
-                    <select onchange="updateBill('${b.id}', 'categoryId', this.value)" class="w-full text-[10px] uppercase font-bold text-slate-400 bg-white/50 border border-slate-200 rounded p-1">
-                        ${categories.map(c => `<option value="${c.id}" ${b.categoryId === c.id ? 'selected' : ''}>${c.label}</option>`).join('')}
-                    </select>
-                </div>`).join('');
-            lucide.createIcons();
-        }
-
-        function renderCategories() {
-            const container = document.getElementById('expenseSliders');
-            if(!container) return;
-            const totalIncome = incomes.reduce((a, b) => a + b.value, 0);
-            container.innerHTML = categories.map(c => {
-                const val = (totalIncome * c.percent) / 100;
-                return `
-                <div class="space-y-1">
-                    <div class="flex justify-between items-center text-[10px] font-bold uppercase text-slate-500">
-                        <input type="text" value="${c.label}" oninput="updateCategoryLabel('${c.id}', this.value)" class="bg-transparent border-none p-0 w-28 focus:ring-0">
-                        <div class="flex items-center gap-2">
-                            <span id="val-${c.id}" class="font-bold" style="color: ${c.color}">${formatCurrency(val)}</span>
-                            <span id="perc-${c.id}" class="opacity-80 font-black" style="color: ${c.color}">${c.percent}%</span>
-                            <button onclick="removeCategory('${c.id}')" class="delete-btn"><i data-lucide="x" class="w-3 h-3"></i></button>
-                        </div>
-                    </div>
-                    <input type="range" value="${c.percent}" oninput="updateCategoryPerc('${c.id}', this.value)" class="w-full" style="accent-color: ${c.color}">
-                </div>`;
-            }).join('');
-            lucide.createIcons();
-        }
-
-        function renderCategoriesLabels() {
-            const totalIncome = incomes.reduce((a, b) => a + b.value, 0);
-            categories.forEach(c => {
-                const val = (totalIncome * c.percent) / 100;
-                const vEl = document.getElementById(`val-${c.id}`);
-                const pEl = document.getElementById(`perc-${c.id}`);
-                if(vEl) vEl.innerText = formatCurrency(val);
-                if(pEl) pEl.innerText = c.percent + '%';
-            });
-        }
-
-        function renderInvestments() {
-            const container = document.getElementById('investmentTableBody');
-            if(!container) return;
-            if (investments.length === 0) { container.innerHTML = `<tr><td colspan="5" class="text-center text-slate-400 py-6 text-xs italic">Nenhum investimento registrado.</td></tr>`; return; }
-            container.innerHTML = investments.map(inv => `
-                <tr class="border-b border-slate-50">
-                    <td class="py-4"><input type="text" value="${inv.asset}" placeholder="Nome" oninput="updateInvestment('${inv.id}', 'asset', this.value)" class="w-full text-xs bg-transparent border-none p-0 focus:ring-0"></td>
-                    <td class="py-4"><input type="text" value="${inv.institution}" placeholder="Banco" oninput="updateInvestment('${inv.id}', 'institution', this.value)" class="w-full text-xs bg-transparent border-none p-0 focus:ring-0"></td>
-                    <td class="py-4">
-                        <select onchange="updateInvestment('${inv.id}', 'type', this.value)" class="bg-transparent text-[10px] font-bold uppercase text-slate-500 border-none p-0 outline-none">
-                            <option value="Reserva" ${inv.type === 'Reserva' ? 'selected' : ''}>Reserva</option>
-                            <option value="Renda Fixa" ${inv.type === 'Renda Fixa' ? 'selected' : ''}>R. Fixa</option>
-                            <option value="Renda Variável" ${inv.type === 'Renda Variável' ? 'selected' : ''}>R. Variável</option>
-                        </select>
-                    </td>
-                    <td class="py-4 text-right"><input type="number" min="0" step="0.01" onfocus="this.select()" value="${inv.value}" oninput="updateInvestment('${inv.id}', 'value', this.value)" class="w-24 text-xs bg-transparent text-right font-bold text-emerald-600 outline-none"></td>
-                    <td class="py-4 text-right">${inv.id !== 'reserve-id' ? `<button onclick="removeInvestment('${inv.id}')" class="delete-btn ml-auto"><i data-lucide="x" class="w-4 h-4"></i></button>` : ''}</td>
-                </tr>`).join('');
-            lucide.createIcons();
-        }
-
-        function renderHistory() {
-            const container = document.getElementById('historyTableBody');
-            if(!container) return;
-            if (history.length === 0) { container.innerHTML = `<tr><td colspan="5" class="text-center text-slate-400 py-6 text-xs italic">Nenhum histórico disponível.</td></tr>`; return; }
-            container.innerHTML = history.map(h => `
-                <tr class="border-b border-slate-50">
-                    <td class="py-4 font-bold uppercase text-slate-600">${h.date}</td>
-                    <td class="py-4 text-emerald-600 font-medium">${formatCurrency(h.income)}</td>
-                    <td class="py-4 text-rose-500 font-medium">${formatCurrency(h.expenses)}</td>
-                    <td class="py-4 font-bold text-slate-700">${formatCurrency(h.income - h.expenses)}</td>
-                    <td class="py-4 text-right"><button onclick="history = history.filter(x => x.id !== '${h.id}'); renderHistory(); triggerSave();" class="delete-btn ml-auto"><i data-lucide="x" class="w-4 h-4"></i></button></td>
-                </tr>`).join('');
-            lucide.createIcons();
-        }
-
-        function saveMonthToHistory() {
-            const inc = incomes.reduce((a, b) => a + b.value, 0);
-            const exp = bills.reduce((a, b) => a + b.value, 0);
-            const month = new Date().toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
-            history.unshift({ id: generateId(), date: month, income: inc, expenses: exp });
-            renderHistory();
-            showToast("Mês fechado e adicionado ao histórico! 📅");
-            saveData(); 
-        }
-
-        function updateWholeScreen() {
-            renderIncomes(); renderBills(); renderCategories(); renderInvestments(); renderHistory();
-            const totalIncome = incomes.reduce((a, b) => a + b.value, 0);
-            if(financeChart) {
-                financeChart.data.labels = categories.map(c => c.label);
-                financeChart.data.datasets[0].data = categories.map(c => (totalIncome * c.percent) / 100);
-                financeChart.data.datasets[0].backgroundColor = categories.map(c => c.color);
-                financeChart.update('none');
-            }
-            if(investChart) {
-                const groups = { 'Reserva': 0, 'Renda Fixa': 0, 'Renda Variável': 0 };
-                investments.forEach(inv => groups[inv.type] += inv.value);
-                investChart.data.datasets[0].data = Object.values(groups);
-                investChart.update('none');
-            }
-            lucide.createIcons();
-            updateUI(true, true);
-        }
-
-        function updateUI(isPartial = false, skipSave = false) {
-            const totalIncome = incomes.reduce((a, b) => a + b.value, 0);
-            const totalBills = bills.reduce((a, b) => a + b.value, 0);
-            const totalReserve = investments.filter(inv => inv.type === 'Reserva').reduce((a, b) => a + b.value, 0);
-            const totalOnlyInvested = investments.filter(inv => inv.type !== 'Reserva').reduce((a, b) => a + b.value, 0);
-            const remaining = totalIncome - totalBills;
-
-            document.getElementById('totalIncomeDisplay').innerText = formatCurrency(totalIncome);
-            document.getElementById('totalBillsDisplay').innerText = formatCurrency(totalBills);
-            
-            const remainingEl = document.getElementById('remainingBalanceDisplay');
-            remainingEl.innerText = formatCurrency(remaining);
-            remainingEl.className = `text-xl font-black ${remaining < 0 ? 'text-rose-600' : 'text-emerald-500'}`;
-
-            document.getElementById('totalOnlyReserveDisplay').innerText = formatCurrency(totalReserve);
-            document.getElementById('totalOnlyInvestedDisplay').innerText = formatCurrency(totalOnlyInvested);
-            document.getElementById('totalCombinedDisplay').innerText = formatCurrency(totalReserve + totalOnlyInvested);
-
-            const totalPerc = categories.reduce((a, b) => a + b.percent, 0);
-            document.getElementById('totalPercentIndicator').innerText = totalPerc + '%';
-            document.getElementById('totalProgressBar').style.width = Math.min(100, totalPerc) + '%';
-            document.getElementById('totalProgressBar').className = `h-full transition-all ${totalPerc > 100 ? 'bg-rose-500' : 'bg-blue-500'}`;
-            
-            document.getElementById('printDate').innerText = 'Gerado em: ' + new Date().toLocaleDateString('pt-BR');
-
-            if (!isPartial) renderCategories();
-
-            // CORREÇÃO: Puxar apenas o valor das "Contas Fixas" para a Meta da Reserva
-            const contasFixasIds = categories.filter(c => c.label.toLowerCase().includes('fixa')).map(c => c.id);
-            const totalContasFixas = bills.filter(b => contasFixasIds.includes(b.categoryId)).reduce((a, b) => a + b.value, 0);
-
-            const meta12 = totalContasFixas * 12;
-            const prog = meta12 > 0 ? Math.min(100, (totalReserve / meta12) * 100) : 0;
-            const missing = Math.max(0, meta12 - totalReserve);
-            
-            const r6 = document.getElementById('reserve6');
-            const r12 = document.getElementById('reserve12');
-            if(r6) r6.innerText = formatCurrency(totalContasFixas * 6);
-            if(r12) r12.innerText = formatCurrency(meta12);
-            
-            document.getElementById('reserveProgressPercent').innerText = Math.round(prog) + '%';
-            document.getElementById('reserveProgressBar').style.width = prog + '%';
-            document.getElementById('reserveProgressBarText').innerText = formatCurrency(totalReserve);
-            
-            document.getElementById('reserveComparisonText').innerText = `${formatCurrency(totalReserve)} / ${formatCurrency(meta12)}`;
-            const missingLabel = document.getElementById('reserveMissingLabel');
-            missingLabel.innerText = missing > 0 ? `Falta: ${formatCurrency(missing)}` : 'Meta Concluída! 🎉';
-            missingLabel.className = missing > 0 ? 'text-[9px] font-bold text-rose-400 uppercase' : 'text-[9px] font-bold text-emerald-500 uppercase';
-
-            document.getElementById('diagnoseList').innerHTML = categories.map(c => {
-                const target = (totalIncome * c.percent) / 100;
-                const actual = bills.filter(b => b.categoryId === c.id).reduce((a, b) => a + b.value, 0);
-                const isOver = actual > target + 0.01;
-                return `
-                <div class="p-3 rounded-xl border transition-all ${isOver ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-emerald-50 border-emerald-100 text-emerald-700'}">
-                    <div class="flex justify-between font-bold uppercase text-[9px] mb-1">
-                        <span>${c.label}</span>
-                        <span>${isOver ? '⚠️ Teto Excedido' : '✅ Ok'}</span>
-                    </div>
-                    <div class="flex justify-between items-end">
-                        <span class="text-lg font-black">${Math.round((actual / (target || 1)) * 100)}%</span>
-                        <span class="text-[10px] opacity-70">${formatCurrency(actual)} / ${formatCurrency(target)}</span>
-                    </div>
-                </div>`;
-            }).join('');
-
-            if(financeChart) {
-                financeChart.data.datasets[0].data = categories.map(c => (totalIncome * c.percent) / 100);
-                financeChart.update('none');
-            }
-
-            if (!skipSave) triggerSave();
-        }
-
-        function initCharts() {
-            const ctx1 = document.getElementById('financeChart').getContext('2d');
-            financeChart = new Chart(ctx1, {
-                type: 'doughnut',
-                data: { labels: [], datasets: [{ data: [], borderWidth: 0, hoverOffset: 4 }] },
-                options: { cutout: '75%', plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } } }, maintainAspectRatio: false, animation: false }
-            });
-
-            const ctx2 = document.getElementById('investChart').getContext('2d');
-            investChart = new Chart(ctx2, {
-                type: 'pie',
-                data: { labels: ['Reserva', 'Fixa', 'Variável'], datasets: [{ data: [0,0,0], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'], borderWidth: 0 }] },
-                options: { plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } } }, maintainAspectRatio: false, animation: false }
-            });
-        }
-
-        async function verificarAssinatura() {
-            if (!_supabase) return true; 
-            
-            const { data: { user } } = await _supabase.auth.getUser();
-            if (!user) {
-                sair(); 
-                return false;
-            }
-
-            const { data: profile } = await _supabase
-                .from('profiles')
-                .select('subscription_status')
-                .eq('id', user.id)
-                .single();
-
-            if (!profile || profile.subscription_status !== 'active') {
-                alert("Acesso restrito para assinantes. Ative sua conta!");
-                window.location.href = `https://buy.stripe.com/test_28E4gB89g0EN075gaqcs800?client_reference_id=${user.id}`;
-                return false;
-            }
-            return true;
-        }
-
-        window.onload = async () => { 
-            const temAcesso = await verificarAssinatura(); 
-            if (temAcesso) {
-                lucide.createIcons(); 
-                initCharts(); 
-                updateWholeScreen(); 
-                await loadData();
-            }
+        // Componente wrapper para os ícones Lucide
+        const Icon = ({ name, className }) => {
+            useEffect(() => {
+                lucide.createIcons();
+            }, [name]);
+            return <i data-lucide={name} className={className}></i>;
         };
 
-        async function sair() {
-            if (_supabase) {
-                await _supabase.auth.signOut(); 
-            }
-            localStorage.removeItem("logado"); 
-            window.location.href = "login.html"; 
+        // --- ESTRUTURA DE DADOS E METADADOS PADRÃO ---
+        const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+        const ICON_MAP = { Wallet: 'wallet', Home: 'home', HeartPulse: 'heart-pulse', Bus: 'bus', Car: 'car', Church: 'church', Smile: 'smile', TrendingUp: 'trending-up', CreditCard: 'credit-card', Receipt: 'receipt' };
+
+        const DEFAULT_METADATA = {
+            'Renda Familiar': 'income', 'Casa': 'expense', 'Saúde': 'expense', 'Automóvel': 'expense',
+            'Transporte': 'expense', 'Cartão de Crédito': 'expense', 'Investimento': 'investment'
+        };
+
+        const CATEGORIES_CONFIG = {
+            'Renda Familiar': { icon: 'Wallet', type: 'income', items: ['Salário Principal', 'Salário Secundário', 'Renda Extra', 'Outros'] },
+            'Casa': { icon: 'Home', type: 'expense', items: ['Aluguel / Prestação', 'Condomínio', 'Luz', 'Água', 'Internet', 'Mercado', 'Gás'] },
+            'Automóvel': { icon: 'Car', type: 'expense', items: ['Parcela do Carro', 'Combustível', 'Seguro', 'IPVA', 'Mecânico', 'Lavagem'] },
+            'Saúde': { icon: 'HeartPulse', type: 'expense', items: ['Plano de Saúde', 'Farmácia', 'Consultas', 'Outros'] },
+            'Transporte': { icon: 'Bus', type: 'expense', items: ['Transporte Público', 'Aplicativos (Uber/99)'] },
+            'Lazer': { icon: 'Smile', type: 'expense', items: ['Alimentação fora', 'Assinaturas (Netflix, etc)', 'Passeios', 'Compras'] },
+            'Cartão de Crédito': { icon: 'CreditCard', type: 'expense', items: ['Cartão Principal', 'Cartão Adicional'] },
+            'Investimento': { icon: 'TrendingUp', type: 'investment', items: ['Reserva de Emergência', 'Renda Fixa', 'Renda Variável'] },
+        };
+
+        const COLORS_GERAL = ['#0ea5e9', '#ec4899', '#10b981', '#8b5cf6', '#f59e0b', '#6366f1', '#f43f5e', '#14b8a6'];
+        const COLORS_INCOME = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e', '#6366f1'];
+        const COLORS_CC = ['#8b5cf6', '#f59e0b', '#ec4899', '#10b981', '#3b82f6', '#f43f5e', '#14b8a6'];
+        const COLORS_INVEST = ['#1e293b', '#f59e0b', '#3b82f6', '#10b981']; 
+
+        const DEFAULT_FIXED_ITEMS = ['Condomínio', 'Luz', 'Água', 'Internet', 'Aluguel', 'Prestação', 'Plano de Saúde', 'Parcela do Carro', 'IPVA', 'Seguro', 'Assinaturas'];
+
+        const isDefaultFixed = (itemName) => {
+            return DEFAULT_FIXED_ITEMS.some(keyword => itemName.toLowerCase().includes(keyword.toLowerCase()));
+        };
+
+        const generateEmptyData = () => {
+            let data = {};
+            MONTHS.forEach(m => {
+                data[m] = {
+                    goals: { fixed: 50, variable: 30, investment: 20 },
+                    itemMetadata: {},
+                    categoriesMetadata: { ...DEFAULT_METADATA }
+                };
+                Object.keys(CATEGORIES_CONFIG).forEach(cat => {
+                    data[m][cat] = {};
+                    data[m].itemMetadata[cat] = {};
+                    CATEGORIES_CONFIG[cat].items.forEach(item => {
+                        data[m][cat][item] = 0;
+                        if (CATEGORIES_CONFIG[cat].type === 'investment') {
+                            data[m].itemMetadata[cat][item] = item.toLowerCase().includes('reserva') ? 'reserva' : 
+                                                              item.toLowerCase().includes('fixa') ? 'fixa' : 'variavel';
+                        } else {
+                            data[m].itemMetadata[cat][item] = isDefaultFixed(item) ? 'fixed' : 'variable';
+                        }
+                    });
+                });
+            });
+            return data;
+        };
+
+        const deepClone = (obj) => {
+            try { return structuredClone(obj); } 
+            catch (e) { return JSON.parse(JSON.stringify(obj)); }
+        };
+
+        // --- COMPONENTES AUXILIARES ---
+        const CurrencyInput = ({ initialValue, onValueChange, className }) => {
+            const formatCurrencyString = (val) => {
+                const num = Number(val);
+                if (isNaN(num)) return '0,00';
+                return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
+            };
+
+            const [displayValue, setDisplayValue] = useState(formatCurrencyString(initialValue));
+
+            useEffect(() => { setDisplayValue(formatCurrencyString(initialValue)); }, [initialValue]);
+
+            const handleChange = (e) => {
+                const rawDigits = e.target.value.replace(/\D/g, '');
+                if (!rawDigits) {
+                    setDisplayValue('0,00');
+                    return;
+                }
+                const numericValue = Number(rawDigits) / 100;
+                setDisplayValue(formatCurrencyString(numericValue));
+            };
+
+            const handleBlur = () => {
+                const rawDigits = displayValue.replace(/\D/g, '');
+                const numericValue = rawDigits ? Number(rawDigits) / 100 : 0;
+                setDisplayValue(formatCurrencyString(numericValue));
+                if (numericValue !== initialValue) onValueChange(numericValue);
+            };
+
+            const handleKeyDown = (e) => { if (e.key === 'Enter') e.target.blur(); };
+
+            return (
+                <input 
+                    type="text" inputMode="numeric" value={displayValue} onChange={handleChange} onBlur={handleBlur} onKeyDown={handleKeyDown}
+                    className={`w-20 sm:w-28 pl-2 sm:pl-4 pr-2 sm:pr-3 py-1.5 text-right text-xs sm:text-sm font-semibold border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${className}`}
+                    placeholder="0,00"
+                />
+            );
+        };
+
+        const EditableRow = ({ name, value, itemType, onRename, onValueChange, onTypeChange, onDelete, isIncome = false, isExpense = false, isInvestment = false }) => {
+            const [localName, setLocalName] = useState(name);
+
+            useEffect(() => { setLocalName(name); }, [name]);
+
+            const handleNameBlur = () => {
+                const trimmed = localName.trim();
+                if (trimmed !== name && trimmed !== '') onRename(name, trimmed);
+                else setLocalName(name);
+            };
+
+            const colorClass = isIncome ? 'text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50' : 'text-rose-600 focus:text-rose-700 focus:bg-rose-50';
+
+            return (
+                <div className="flex items-center justify-between p-2 bg-white hover:bg-slate-50/80 border border-slate-100 rounded-xl transition-colors group shadow-sm gap-1 flex-wrap sm:flex-nowrap">
+                    <input type="text" value={localName} onChange={(e) => setLocalName(e.target.value)} onBlur={handleNameBlur}
+                        className="bg-transparent font-semibold text-slate-700 text-xs outline-none w-full sm:w-auto flex-1 min-w-[100px] mb-1 sm:mb-0" placeholder="Descrição da conta"
+                    />
+                    <div className="flex items-center gap-1 shrink-0 ml-auto">
+                        {isInvestment ? (
+                            <select value={itemType || 'variavel'} onChange={(e) => onTypeChange(e.target.value)}
+                                className={`text-[9px] uppercase font-bold rounded px-1.5 py-1 outline-none cursor-pointer transition-colors ${itemType === 'reserva' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : itemType === 'fixa' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'}`}
+                            >
+                                <option value="reserva">Reserva</option><option value="fixa">Fixa</option><option value="variavel">Var</option>
+                            </select>
+                        ) : isExpense ? (
+                            <select value={itemType || 'variable'} onChange={(e) => onTypeChange(e.target.value)}
+                                className={`text-[9px] uppercase font-bold rounded px-1.5 py-1 outline-none cursor-pointer transition-colors ${itemType === 'fixed' ? 'bg-rose-100 text-rose-700 hover:bg-rose-200' : 'bg-orange-100 text-orange-700 hover:bg-orange-200'}`}
+                            >
+                                <option value="fixed">Fixo</option><option value="variable">Var</option>
+                            </select>
+                        ) : null}
+                        <CurrencyInput initialValue={value} onValueChange={onValueChange} className={`w-16 sm:w-20 !pl-1 !pr-1 !py-1 border-transparent bg-transparent hover:bg-white font-bold text-xs ${colorClass}`} />
+                        <button onClick={() => onDelete(name)} className="text-rose-400 hover:text-rose-600 p-1 sm:p-0.5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity" title="Excluir">
+                            <Icon name="x" className="w-3 h-3 sm:w-4 sm:h-4" />
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const InvestmentRow = ({ item, onRename, onValueChange, onTypeChange, onInstChange, onDelete }) => {
+            const [localName, setLocalName] = useState(item.name);
+            const [localInst, setLocalInst] = useState(item.inst);
+            
+            useEffect(() => { setLocalName(item.name); }, [item.name]);
+            useEffect(() => { setLocalInst(item.inst); }, [item.inst]);
+            
+            const handleNameBlur = () => {
+                const trimmed = localName.trim();
+                if (trimmed !== item.name && trimmed !== '') onRename(item.category, item.name, trimmed);
+                else setLocalName(item.name);
+            };
+            const handleInstBlur = () => onInstChange(item.category, item.name, localInst.trim());
+
+            return (
+                <tr className="bg-white border-b border-slate-100 hover:bg-slate-50/50 transition-colors group flex flex-col sm:table-row mb-4 sm:mb-0 p-3 sm:p-0 rounded-xl sm:rounded-none shadow-sm sm:shadow-none border sm:border-0 sm:border-b">
+                    <td className="px-2 sm:px-6 py-2 sm:py-3 border-b border-slate-50 sm:border-0">
+                        <div className="flex sm:block items-center justify-between mb-1 sm:mb-0">
+                            <span className="sm:hidden text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ativo</span>
+                            <input type="text" value={localName} onChange={(e) => setLocalName(e.target.value)} onBlur={handleNameBlur} className="font-medium text-slate-900 bg-transparent outline-none w-full sm:min-w-[120px] hover:bg-slate-100 focus:bg-white rounded px-2 py-1 text-xs sm:text-sm text-right sm:text-left" placeholder="Nome do Ativo" />
+                        </div>
+                    </td>
+                    <td className="px-2 sm:px-6 py-2 sm:py-3 border-b border-slate-50 sm:border-0">
+                        <div className="flex sm:block items-center justify-between">
+                            <span className="sm:hidden text-[10px] font-bold text-slate-400 uppercase tracking-wider">Instituição</span>
+                            <input type="text" value={localInst} onChange={(e) => setLocalInst(e.target.value)} onBlur={handleInstBlur} className="font-medium text-slate-500 bg-transparent outline-none w-full sm:min-w-[100px] hover:bg-slate-100 focus:bg-white rounded px-2 py-1 text-xs sm:text-sm text-right sm:text-left" placeholder="Ex: Itaú, Rico..." />
+                        </div>
+                    </td>
+                    <td className="px-2 sm:px-6 py-2 sm:py-3 border-b border-slate-50 sm:border-0">
+                        <div className="flex sm:block items-center justify-between">
+                            <span className="sm:hidden text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tipo</span>
+                            <select value={item.type} onChange={(e) => onTypeChange(item.category, item.name, e.target.value)} className={`text-[10px] font-bold px-2 py-1.5 rounded outline-none cursor-pointer uppercase ${item.type === 'reserva' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : item.type === 'fixa' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'}`}>
+                                <option value="reserva">Reserva</option><option value="fixa">Fixa</option><option value="variavel">Variável</option>
+                            </select>
+                        </div>
+                    </td>
+                    <td className="px-2 sm:px-6 py-2 sm:py-3 text-right relative flex sm:table-cell items-center justify-between sm:justify-end">
+                        <span className="sm:hidden text-[10px] font-bold text-slate-400 uppercase tracking-wider">Valor</span>
+                        <div className="relative inline-flex items-center justify-end w-full sm:w-auto">
+                            <span className="absolute right-[80px] sm:right-[110px] text-[9px] sm:text-[10px] font-bold text-slate-400 pointer-events-none">R$</span>
+                            <CurrencyInput initialValue={item.value} onValueChange={(newVal) => onValueChange(item.category, item.name, newVal)} className="w-20 sm:w-24 !pl-4 sm:!pl-6 !pr-2 !py-1 border-slate-100 bg-slate-50/50 focus:bg-white min-w-[80px]" />
+                        </div>
+                    </td>
+                    <td className="px-2 sm:px-3 py-2 sm:py-3 text-center sm:table-cell">
+                        <button onClick={() => onDelete(item.category, item.name)} className="text-rose-500 hover:text-rose-700 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity p-2 sm:p-1 w-full sm:w-auto flex justify-center items-center gap-1 bg-rose-50 sm:bg-transparent rounded-lg mt-2 sm:mt-0 text-xs sm:text-base font-bold sm:font-normal">
+                            <Icon name="x" className="w-4 h-4" /> <span className="sm:hidden">Excluir Ativo</span>
+                        </button>
+                    </td>
+                </tr>
+            );
+        };
+
+        // --- COMPONENTE PRINCIPAL (APP) ---
+        function App() {
+            const [user, setUser] = useState(null);
+            const [budgetData, setBudgetData] = useState(generateEmptyData());
+            const [currentMonthIdx, setCurrentMonthIdx] = useState(new Date().getMonth());
+            const [loading, setLoading] = useState(true);
+            const [saving, setSaving] = useState(false);
+            const [errorMsg, setErrorMsg] = useState(null);
+            const [confirmMonthChange, setConfirmMonthChange] = useState(null);
+            const [activeTab, setActiveTab] = useState('dashboard');
+            
+            const currentMonth = MONTHS[currentMonthIdx];
+
+            // Inicialização e Autenticação com Supabase
+            useEffect(() => {
+                const initApp = async () => {
+                    // Proteção secundária para ambiente isolado
+                    if (localStorage.getItem("logado") !== "sim") {
+                        if (window.location.protocol !== 'about:' && window.location.protocol !== 'data:' && window.location.hostname !== '') {
+                            window.location.href = "login.html";
+                            return;
+                        }
+                    }
+
+                    const { data: { session }, error } = await supabaseClient.auth.getSession();
+                    
+                    if (error || !session?.user) {
+                        localStorage.removeItem("logado");
+                        if (window.location.protocol !== 'about:' && window.location.protocol !== 'data:' && window.location.hostname !== '') {
+                            window.location.href = "login.html";
+                            return;
+                        }
+                    }
+
+                    // Se estiver no preview sem sessão real, mockar um usuário
+                    if (!session?.user) {
+                        console.log("Mocking usuário no ambiente de preview...");
+                        setLoading(false);
+                        return;
+                    }
+
+                    // Verifica a Assinatura (Profile)
+                    const { data: profile } = await supabaseClient
+                        .from('profiles')
+                        .select('subscription_status')
+                        .eq('id', session.user.id)
+                        .single();
+
+                    if (!profile || profile.subscription_status !== 'active') {
+                        alert("Acesso restrito para assinantes. Ative sua conta!");
+                        window.location.href = `https://buy.stripe.com/test_28E4gB89g0EN075gaqcs800?client_reference_id=${session.user.id}`;
+                        return;
+                    }
+
+                    setUser(session.user);
+                    loadDadosSupabase(session.user.id);
+                };
+                
+                initApp();
+            }, []);
+
+            const loadDadosSupabase = async (userId) => {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('dados_financeiros')
+                        .select('payload')
+                        .eq('id', userId)
+                        .single();
+
+                    if (data && data.payload) {
+                        const payload = data.payload;
+                        
+                        // Verifica se é a estrutura antiga ou a nova (com meses)
+                        if (payload.Janeiro) {
+                            // É a estrutura nova!
+                            setBudgetData(payload);
+                        } else {
+                            // É a estrutura antiga. Como a plataforma mudou muito, 
+                            // carregamos a nova estrutura vazia.
+                            console.log("Estrutura antiga detectada, iniciando novo ciclo.");
+                            setBudgetData(generateEmptyData());
+                        }
+                    } else {
+                        // Usuário novo
+                        setBudgetData(generateEmptyData());
+                    }
+                } catch (err) {
+                    console.error("Erro ao carregar dados", err);
+                    setErrorMsg("Erro de conexão.");
+                }
+                setLoading(false);
+            };
+
+            const saveToSupabase = async (dataToSave) => {
+                if (!user) return;
+                setSaving(true);
+                setErrorMsg(null);
+                try {
+                    const { error } = await supabaseClient
+                        .from('dados_financeiros')
+                        .upsert({ 
+                            id: user.id, 
+                            payload: dataToSave,
+                            updated_at: new Date()
+                        });
+
+                    if (error) throw error;
+                } catch (error) {
+                    console.error("Save error:", error);
+                    setErrorMsg("Falha ao salvar.");
+                } finally {
+                    setSaving(false);
+                }
+            };
+
+            const logout = async () => {
+                await supabaseClient.auth.signOut();
+                localStorage.removeItem("logado");
+                if (window.location.protocol !== 'about:' && window.location.protocol !== 'data:' && window.location.hostname !== '') {
+                    window.location.href = "login.html";
+                } else {
+                    alert("Sessão finalizada! (Redirecionamento bloqueado no ambiente de teste)");
+                }
+            };
+
+            // Funções de Manipulação de Dados
+            const handleValueChange = (category, item, numValue) => {
+                const updatedData = deepClone(budgetData);
+                updatedData[currentMonth][category][item] = numValue;
+                setBudgetData(updatedData);
+                saveToSupabase(updatedData);
+            };
+
+            const handleItemTypeChange = (category, item, newType) => {
+                const updatedData = deepClone(budgetData);
+                if (!updatedData[currentMonth].itemMetadata) updatedData[currentMonth].itemMetadata = {};
+                if (!updatedData[currentMonth].itemMetadata[category]) updatedData[currentMonth].itemMetadata[category] = {};
+                updatedData[currentMonth].itemMetadata[category][item] = newType;
+                setBudgetData(updatedData);
+                saveToSupabase(updatedData);
+            };
+
+            const handleInstitutionChange = (category, item, inst) => {
+                const updatedData = deepClone(budgetData);
+                if (!updatedData[currentMonth].itemMetadata) updatedData[currentMonth].itemMetadata = {};
+                if (!updatedData[currentMonth].itemMetadata[category]) updatedData[currentMonth].itemMetadata[category] = {};
+                updatedData[currentMonth].itemMetadata[category][`${item}_inst`] = inst;
+                setBudgetData(updatedData);
+                saveToSupabase(updatedData);
+            };
+
+            const handleGoalChange = (group, value) => {
+                const numValue = parseInt(value) || 0;
+                const currentGoals = budgetData[currentMonth]?.goals || { fixed: 50, variable: 30, investment: 20 };
+                const updatedData = deepClone(budgetData);
+                updatedData[currentMonth].goals = { ...currentGoals, [group]: numValue };
+                setBudgetData(updatedData);
+                saveToSupabase(updatedData);
+            };
+
+            const handleCopyFromPreviousMonth = () => {
+                if (currentMonthIdx === 0) return;
+                const previousMonth = MONTHS[currentMonthIdx - 1];
+                const previousData = budgetData[previousMonth];
+                if (!previousData) return;
+
+                const updatedData = deepClone(budgetData);
+                updatedData[currentMonth] = deepClone(previousData);
+                setBudgetData(updatedData);
+                saveToSupabase(updatedData);
+            };
+
+            const handleAddCategory = () => {
+                let newName = 'Nova Categoria';
+                let counter = 1;
+                while (budgetData[currentMonth][newName] !== undefined) {
+                    newName = `Nova Categoria ${counter}`;
+                    counter++;
+                }
+                const updatedData = deepClone(budgetData);
+                updatedData[currentMonth][newName] = {};
+                if (!updatedData[currentMonth].itemMetadata) updatedData[currentMonth].itemMetadata = {};
+                if (!updatedData[currentMonth].categoriesMetadata) updatedData[currentMonth].categoriesMetadata = {};
+                
+                updatedData[currentMonth].itemMetadata[newName] = {};
+                updatedData[currentMonth].categoriesMetadata[newName] = 'expense';
+                
+                setBudgetData(updatedData);
+                saveToSupabase(updatedData);
+            };
+
+            const handleRenameCategory = (oldName, newName) => {
+                if (oldName === newName || newName.trim() === '') return;
+                const finalName = newName.trim();
+                const updatedData = deepClone(budgetData);
+                if (updatedData[currentMonth][finalName] !== undefined && finalName !== oldName) return;
+
+                updatedData[currentMonth][finalName] = updatedData[currentMonth][oldName];
+                delete updatedData[currentMonth][oldName];
+                
+                if (updatedData[currentMonth].itemMetadata && updatedData[currentMonth].itemMetadata[oldName]) {
+                    updatedData[currentMonth].itemMetadata[finalName] = updatedData[currentMonth].itemMetadata[oldName];
+                    delete updatedData[currentMonth].itemMetadata[oldName];
+                }
+                if (updatedData[currentMonth].categoriesMetadata && updatedData[currentMonth].categoriesMetadata[oldName]) {
+                    updatedData[currentMonth].categoriesMetadata[finalName] = updatedData[currentMonth].categoriesMetadata[oldName];
+                    delete updatedData[currentMonth].categoriesMetadata[oldName];
+                }
+                setBudgetData(updatedData);
+                saveToSupabase(updatedData);
+            };
+
+            const handleDeleteCategory = (catName) => {
+                const updatedData = deepClone(budgetData);
+                delete updatedData[currentMonth][catName];
+                if (updatedData[currentMonth].itemMetadata) delete updatedData[currentMonth].itemMetadata[catName];
+                if (updatedData[currentMonth].categoriesMetadata) delete updatedData[currentMonth].categoriesMetadata[catName];
+                setBudgetData(updatedData);
+                saveToSupabase(updatedData);
+            };
+
+            const handleAddItem = (categoryName, defaultName = 'Nova Conta', defaultType = 'auto') => {
+                const updatedData = deepClone(budgetData);
+                if (!updatedData[currentMonth][categoryName]) {
+                    updatedData[currentMonth][categoryName] = {};
+                    if(!updatedData[currentMonth].categoriesMetadata) updatedData[currentMonth].categoriesMetadata = {};
+                    updatedData[currentMonth].categoriesMetadata[categoryName] = categoryName === 'Investimento' ? 'investment' : categoryName === 'Renda Familiar' ? 'income' : 'expense';
+                }
+
+                let newName = defaultName;
+                let counter = 1;
+                const currentItems = updatedData[currentMonth][categoryName];
+                while (currentItems[newName] !== undefined) {
+                    newName = `${defaultName} ${counter}`;
+                    counter++;
+                }
+                updatedData[currentMonth][categoryName][newName] = 0;
+                
+                if (!updatedData[currentMonth].itemMetadata) updatedData[currentMonth].itemMetadata = {};
+                if (!updatedData[currentMonth].itemMetadata[categoryName]) updatedData[currentMonth].itemMetadata[categoryName] = {};
+                
+                const catMetaType = updatedData[currentMonth].categoriesMetadata[categoryName] || CATEGORIES_CONFIG[categoryName]?.type || 'expense';
+
+                if(defaultType === 'auto') {
+                    if (catMetaType === 'investment') {
+                        updatedData[currentMonth].itemMetadata[categoryName][newName] = 'variavel';
+                    } else {
+                        updatedData[currentMonth].itemMetadata[categoryName][newName] = isDefaultFixed(newName) ? 'fixed' : 'variable';
+                    }
+                } else {
+                    updatedData[currentMonth].itemMetadata[categoryName][newName] = defaultType;
+                }
+
+                setBudgetData(updatedData);
+                saveToSupabase(updatedData);
+            };
+
+            const handleRenameItem = (categoryName, oldName, newName) => {
+                if (oldName === newName || newName.trim() === '') return;
+                const updatedData = deepClone(budgetData);
+                const currentItems = updatedData[currentMonth][categoryName];
+                
+                let finalName = newName.trim();
+                let counter = 1;
+                while (currentItems[finalName] !== undefined && finalName !== oldName) {
+                    finalName = `${newName.trim()} ${counter}`;
+                    counter++;
+                }
+
+                currentItems[finalName] = currentItems[oldName];
+                delete currentItems[oldName];
+                
+                if (updatedData[currentMonth].itemMetadata && updatedData[currentMonth].itemMetadata[categoryName]) {
+                    updatedData[currentMonth].itemMetadata[categoryName][finalName] = updatedData[currentMonth].itemMetadata[categoryName][oldName];
+                    delete updatedData[currentMonth].itemMetadata[categoryName][oldName];
+                    if (updatedData[currentMonth].itemMetadata[categoryName][`${oldName}_inst`] !== undefined) {
+                        updatedData[currentMonth].itemMetadata[categoryName][`${finalName}_inst`] = updatedData[currentMonth].itemMetadata[categoryName][`${oldName}_inst`];
+                        delete updatedData[currentMonth].itemMetadata[categoryName][`${oldName}_inst`];
+                    }
+                }
+                setBudgetData(updatedData);
+                saveToSupabase(updatedData);
+            };
+
+            const handleDeleteItem = (categoryName, itemName) => {
+                const updatedData = deepClone(budgetData);
+                delete updatedData[currentMonth][categoryName][itemName];
+                if (updatedData[currentMonth].itemMetadata && updatedData[currentMonth].itemMetadata[categoryName]) {
+                    delete updatedData[currentMonth].itemMetadata[categoryName][itemName];
+                    delete updatedData[currentMonth].itemMetadata[categoryName][`${itemName}_inst`];
+                }
+                setBudgetData(updatedData);
+                saveToSupabase(updatedData);
+            };
+
+            const handleAddIncome = () => { handleAddItem('Renda Familiar', 'Nova Renda', 'income'); };
+            const handleDeleteIncome = (item) => { handleDeleteItem('Renda Familiar', item); };
+            const handleRenameIncome = (oldName, newName) => { handleRenameItem('Renda Familiar', oldName, newName); };
+
+            const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+
+            const getCategoryTotal = (month, category) => {
+                if (!budgetData[month] || !budgetData[month][category]) return 0;
+                return Object.values(budgetData[month][category]).reduce((acc, val) => acc + (Number(val) || 0), 0);
+            };
+
+            const getCategoryIconAndColor = (catName) => {
+                if (CATEGORIES_CONFIG[catName]) return { ...CATEGORIES_CONFIG[catName], color: 'text-slate-600', bg: 'bg-slate-100' };
+                return { icon: 'Receipt', color: 'text-slate-600', bg: 'bg-slate-100', type: 'expense' };
+            };
+
+            // Cálculos
+            const { totals, metrics, historyData } = useMemo(() => {
+                const calcMonth = (m) => {
+                    let renda = 0, gastos = 0, fixos = 0, variaveis = 0, investimentos = 0, reservaAtual = 0;
+                    Object.keys(budgetData[m]).forEach(cat => {
+                        if (cat === 'goals' || cat === 'itemMetadata' || cat === 'categoriesMetadata') return;
+                        const config = CATEGORIES_CONFIG[cat] || { type: 'expense' };
+                        const catMetaType = budgetData[m].categoriesMetadata?.[cat] || config.type || 'expense';
+
+                        if (catMetaType === 'income' || cat === 'Renda Familiar') {
+                            renda += getCategoryTotal(m, cat);
+                        } else if (catMetaType === 'investment' || cat === 'Investimento') {
+                            Object.entries(budgetData[m][cat]).forEach(([item, val]) => {
+                                const numVal = Number(val) || 0;
+                                const type = budgetData[m].itemMetadata?.[cat]?.[item] || (item.toLowerCase().includes('reserva') ? 'reserva' : item.toLowerCase().includes('fixa') ? 'fixa' : 'variavel');
+                                if(type === 'reserva') reservaAtual += numVal;
+                                else investimentos += numVal;
+                            });
+                        } else {
+                            Object.entries(budgetData[m][cat]).forEach(([item, val]) => {
+                                const numVal = Number(val) || 0;
+                                gastos += numVal;
+                                const type = budgetData[m].itemMetadata?.[cat]?.[item] || 'variable';
+                                if (type === 'fixed') fixos += numVal;
+                                else variaveis += numVal;
+                            });
+                        }
+                    });
+
+                    const saldoLivre = renda - (gastos + investimentos + reservaAtual);
+                    return { renda, gastos, saldo: saldoLivre, fixos, variaveis, investimentos, reservaAtual };
+                };
+
+                const current = calcMonth(currentMonth);
+                let acumulado = 0, reservaTotalAcumulada = 0;
+                const historyList = [];
+
+                for (let i = 0; i <= currentMonthIdx; i++) {
+                    const mData = calcMonth(MONTHS[i]);
+                    acumulado += mData.saldo;
+                    reservaTotalAcumulada += mData.reservaAtual;
+                    const totalInvestidoMes = mData.investimentos + mData.reservaAtual;
+                    historyList.push({ month: MONTHS[i], renda: mData.renda, gastos: mData.gastos, investido: totalInvestidoMes, saldo: mData.saldo });
+                }
+
+                const custoDeVida = current.fixos;
+                const metaReserva6m = custoDeVida * 6;
+                const metaReserva12m = custoDeVida * 12;
+
+                return { totals: { ...current, acumulado }, metrics: { custoDeVida, metaReserva6m, metaReserva12m, reservaTotalAcumulada }, historyData: historyList };
+            }, [budgetData, currentMonthIdx]);
+
+            // Gráficos Data
+            const yearlyBarData = useMemo(() => {
+                return MONTHS.map(m => {
+                    let renda = 0, gastos = 0, invest = 0;
+                    Object.keys(budgetData[m]).forEach(cat => {
+                        if (cat === 'goals' || cat === 'itemMetadata' || cat === 'categoriesMetadata') return;
+                        const config = CATEGORIES_CONFIG[cat] || { type: 'expense' };
+                        const catMetaType = budgetData[m].categoriesMetadata?.[cat] || config.type || 'expense';
+                        if (catMetaType === 'income' || cat === 'Renda Familiar') renda += getCategoryTotal(m, cat);
+                        else if (catMetaType === 'investment' || cat === 'Investimento') invest += getCategoryTotal(m, cat);
+                        else gastos += getCategoryTotal(m, cat);
+                    });
+                    const saidasTotais = gastos + invest;
+                    return { name: m.substring(0, 3), Rendimentos: renda, Gastos: gastos, Investido: invest, Saldo: renda - saidasTotais };
+                });
+            }, [budgetData]);
+
+            const dashboardChartData = useMemo(() => {
+                return Object.keys(budgetData[currentMonth]).filter(cat => {
+                    if (cat === 'goals' || cat === 'itemMetadata' || cat === 'categoriesMetadata') return false;
+                    const config = CATEGORIES_CONFIG[cat] || { type: 'expense' };
+                    const catMetaType = budgetData[currentMonth].categoriesMetadata?.[cat] || config.type || 'expense';
+                    return catMetaType === 'expense';
+                }).map(cat => ({ name: cat, value: getCategoryTotal(currentMonth, cat) })).filter(d => d.value > 0).sort((a, b) => b.value - a.value);
+            }, [budgetData, currentMonthIdx]);
+
+            const fixedVariableChartData = useMemo(() => [
+                { name: 'Contas Fixas', value: totals.fixos }, { name: 'Despesas Variáveis', value: totals.variaveis }
+            ].filter(d => d.value > 0), [totals.fixos, totals.variaveis]);
+
+            const incomeChartData = useMemo(() => {
+                const meta = budgetData[currentMonth].categoriesMetadata || DEFAULT_METADATA;
+                const incomeCats = Object.keys(budgetData[currentMonth]).filter(c => meta[c] === 'income' || c === 'Renda Familiar');
+                let items = [];
+                incomeCats.forEach(cat => Object.entries(budgetData[currentMonth][cat]).forEach(([name, value]) => items.push({name, value: Number(value)})));
+                return items.filter(d => d.value > 0).sort((a,b) => b.value - a.value);
+            }, [budgetData, currentMonthIdx]);
+
+            const creditCardChartData = useMemo(() => {
+                const ccCats = Object.keys(budgetData[currentMonth]).filter(c => c.toLowerCase().includes('cartão') || c.toLowerCase().includes('cartao'));
+                let items = [];
+                ccCats.forEach(cat => {
+                    if(cat !== 'goals' && cat !== 'itemMetadata' && cat !== 'categoriesMetadata') {
+                        Object.entries(budgetData[currentMonth][cat]).forEach(([name, value]) => items.push({name, value: Number(value)}));
+                    }
+                });
+                return items.filter(d => d.value > 0).sort((a,b) => b.value - a.value);
+            }, [budgetData, currentMonthIdx]);
+
+            const investmentChartData = useMemo(() => {
+                const meta = budgetData[currentMonth].categoriesMetadata || DEFAULT_METADATA;
+                const investCats = Object.keys(budgetData[currentMonth]).filter(c => meta[c] === 'investment' || c === 'Investimento');
+                let items = [];
+                investCats.forEach(cat => Object.entries(budgetData[currentMonth][cat]).forEach(([name, value]) => items.push({name, value: Number(value)})));
+                return items.filter(d => d.value > 0).sort((a,b) => b.value - a.value);
+            }, [budgetData, currentMonthIdx]);
+
+            const isMonthEmpty = useMemo(() => totals.renda === 0 && totals.gastos === 0 && totals.investimentos === 0 && totals.reservaAtual === 0, [totals]);
+
+            // --- RENDERIZADORES DE ABAS ---
+            const renderEditableCategoryCard = (categoryName, items) => {
+                const total = Object.values(items).reduce((acc, val) => acc + Number(val || 0), 0);
+                const theme = getCategoryIconAndColor(categoryName);
+                const iconName = ICON_MAP[theme.icon] || 'receipt';
+                const config = CATEGORIES_CONFIG[categoryName] || { type: 'expense' };
+                const catMetaType = budgetData[currentMonth].categoriesMetadata?.[categoryName] || config.type || 'expense';
+                const isInvestmentCategory = catMetaType === 'investment';
+
+                return (
+                    <div key={categoryName} className="bg-white rounded-3xl shadow-sm border border-slate-200 p-4 flex flex-col h-full relative group/card hover:shadow-md transition-shadow">
+                        <div className="flex flex-col gap-3 mb-4 pb-4 border-b border-slate-100">
+                            <div className="flex justify-between items-start gap-2">
+                                <div className="flex items-center gap-2 flex-1">
+                                    <div className={`p-2 rounded-xl ${theme.bg}`}><Icon name={iconName} className={`w-4 h-4 ${theme.color}`} /></div>
+                                    <input type="text" defaultValue={categoryName} onBlur={(e) => handleRenameCategory(categoryName, e.target.value)} className="font-bold text-slate-800 text-sm outline-none bg-transparent hover:bg-slate-50 focus:bg-blue-50 focus:text-blue-700 rounded px-2 py-1 w-full uppercase tracking-wide transition-colors" />
+                                </div>
+                                <button onClick={() => handleDeleteCategory(categoryName)} className="text-slate-300 hover:text-rose-500 transition-colors p-1 opacity-0 group-hover/card:opacity-100 bg-white rounded-full shadow-sm border border-slate-100" title="Excluir Categoria Inteira">
+                                    <Icon name="x" className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                                <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider pl-2">Total na Categoria</span>
+                                <span className="font-bold text-slate-800 text-xs sm:text-sm">{formatCurrency(total)}</span>
+                            </div>
+                        </div>
+                        <div className="space-y-2 flex-1 mb-4">
+                            {Object.entries(items).map(([itemName, itemValue]) => {
+                                const itemType = budgetData[currentMonth].itemMetadata?.[categoryName]?.[itemName] || (isInvestmentCategory ? 'variavel' : 'variable');
+                                return (
+                                    <EditableRow key={itemName} name={itemName} value={itemValue} isExpense={catMetaType === 'expense'} isInvestment={isInvestmentCategory} itemType={itemType} onRename={(oldN, newN) => handleRenameItem(categoryName, oldN, newN)} onValueChange={(val) => handleValueChange(categoryName, itemName, val)} onTypeChange={(newType) => handleItemTypeChange(categoryName, itemName, newType)} onDelete={(name) => handleDeleteItem(categoryName, name)} />
+                                )
+                            })}
+                            {Object.keys(items).length === 0 && <div className="text-xs text-slate-400 italic text-center py-6 bg-slate-50 rounded-xl border border-dashed border-slate-200">Nenhuma conta cadastrada.</div>}
+                        </div>
+                        <div className="mt-auto">
+                            <button onClick={() => handleAddItem(categoryName)} className="w-full bg-blue-50/50 hover:bg-blue-500 text-blue-600 hover:text-white py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1 shadow-sm">
+                                <Icon name="plus" className="w-3 h-3" /> Adicionar Conta
+                            </button>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderPieChartCard = (title, data, colors) => (
+                <div className="bg-white p-4 md:p-6 rounded-3xl shadow-sm border border-slate-200 flex flex-col h-full">
+                    <h3 className="font-extrabold text-blue-700 uppercase text-xs tracking-widest text-center mb-6">{title}</h3>
+                    {data.length > 0 ? (
+                        <>
+                            <div className="flex-1 w-full flex items-center justify-center min-h-[200px] sm:min-h-[240px]">
+                                <ResponsiveContainer width="100%" height={240}>
+                                    <PieChart>
+                                        <Pie data={data} cx="50%" cy="50%" outerRadius={90} dataKey="value" labelLine={false} label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                                            if (percent < 0.05) return null; 
+                                            const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
+                                            const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
+                                            const y = cy + radius * Math.sin(-midAngle * (Math.PI / 180));
+                                            return <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize="10" fontWeight="bold">{`${(percent * 100).toFixed(1)}%`}</text>;
+                                        }}>
+                                            {data.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
+                                        </Pie>
+                                        <RechartsTooltip formatter={(v) => formatCurrency(v)} />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <div className="w-full mt-4 space-y-2">
+                                {data.map((entry, i) => (
+                                    <div key={i} className="flex justify-between text-xs items-center p-1.5 hover:bg-slate-50 rounded-lg">
+                                        <div className="flex items-center gap-2 overflow-hidden mr-2">
+                                            <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
+                                            <span className="text-slate-600 font-medium truncate">{entry.name}</span>
+                                        </div>
+                                        <span className="font-bold text-slate-800 shrink-0">{formatCurrency(entry.value)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    ) : <div className="flex-1 flex flex-col items-center justify-center text-slate-400 text-xs sm:text-sm italic min-h-[200px]">Nenhum dado registrado.</div>}
+                </div>
+            );
+
+            const renderDashboard = () => (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+                        {[
+                            { label: 'Rendimentos', val: totals.renda, color: 'text-emerald-600' },
+                            { label: 'Gastos', val: totals.gastos, color: 'text-rose-600' },
+                            { label: 'Investido', val: totals.investimentos + totals.reservaAtual, color: 'text-blue-600', bg: 'bg-blue-50' },
+                            { label: 'Saldo Mês', val: totals.saldo, color: totals.saldo >= 0 ? 'text-emerald-700' : 'text-rose-700', bg: totals.saldo >= 0 ? 'bg-emerald-50' : 'bg-rose-50' },
+                            { label: 'Acumulado', val: totals.acumulado, color: totals.acumulado >= 0 ? 'text-blue-700' : 'text-rose-700', bg: totals.acumulado >= 0 ? 'bg-blue-50' : 'bg-rose-50' }
+                        ].map((card, i) => (
+                            <div key={i} className={`p-3 md:p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-center ${card.bg || 'bg-white'}`}>
+                                <p className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">{card.label}</p>
+                                <p className={`text-base sm:text-lg md:text-xl font-bold truncate mt-1 ${card.color}`}>{formatCurrency(card.val)}</p>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <h3 className="font-bold text-slate-800 uppercase text-xs md:text-sm tracking-wide mb-6 text-center">Rendimentos, Gastos, Investimentos e Saldo</h3>
+                        <div className="h-[300px] md:h-[350px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={yearlyBarData} margin={{ top: 10, right: 10, left: 15, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} dy={10} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} width={65} tickFormatter={(val) => `R$ ${val}`} />
+                                    <RechartsTooltip formatter={(value) => formatCurrency(value)} cursor={{ fill: '#f8fafc' }} />
+                                    <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
+                                    <Bar dataKey="Rendimentos" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                                    <Bar dataKey="Gastos" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                                    <Bar dataKey="Investido" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                                    <Bar dataKey="Saldo" fill="#8b5cf6" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                        {renderPieChartCard("Para onde vai meu dinheiro? (Categorias)", dashboardChartData, COLORS_GERAL)}
+                        {renderPieChartCard("Gastos: Fixos vs Variáveis", fixedVariableChartData, ['#f43f5e', '#f59e0b'])}
+                        {renderPieChartCard("Rendimentos", incomeChartData, COLORS_INCOME)}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                        {renderPieChartCard("Gastos com Cartão de Crédito", creditCardChartData, COLORS_CC)}
+                        {renderPieChartCard("Valor Investido", investmentChartData, COLORS_INVEST)}
+                    </div>
+                </div>
+            );
+
+            const renderPlanejamento = () => {
+                const goals = budgetData[currentMonth]?.goals || { fixed: 50, variable: 30, investment: 20 };
+                const totalGoalPercent = Number(goals.fixed) + Number(goals.variable) + Number(goals.investment);
+                const isExceeding = totalGoalPercent > 100;
+                const plan = { fixed: (goals.fixed / 100) * totals.renda, variable: (goals.variable / 100) * totals.renda, investment: (goals.investment / 100) * totals.renda };
+                const chartData = [ { name: 'Contas Fixas', value: goals.fixed, color: '#3b82f6' }, { name: 'Despesas Variáveis', value: goals.variable, color: '#ec4899' }, { name: 'Investimentos', value: goals.investment, color: '#10b981' } ].filter(d => d.value > 0);
+
+                const renderAlertCard = (title, actual, planned) => {
+                    const isOk = actual <= planned;
+                    const percent = planned > 0 ? (actual / planned) * 100 : 0;
+                    return (
+                        <div className={`p-4 rounded-xl border ${isOk ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
+                            <div className="flex justify-between items-center mb-3">
+                                <span className="font-bold text-[10px] md:text-xs text-slate-600 uppercase tracking-wide">{title}</span>
+                                <span className={`text-[10px] md:text-xs font-bold px-2 py-1 rounded flex items-center gap-1 ${isOk ? 'bg-emerald-200 text-emerald-800' : 'bg-rose-200 text-rose-800'}`}>
+                                    <Icon name={isOk ? "check-circle-2" : "alert-triangle"} className="w-3 h-3" /> {isOk ? 'OK' : 'ACIMA'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-end">
+                                <span className={`text-2xl md:text-3xl font-bold ${isOk ? 'text-emerald-700' : 'text-rose-700'}`}>{percent.toFixed(0)}%</span>
+                                <div className="text-right flex flex-col">
+                                    <span className="text-[10px] md:text-xs text-slate-500 line-through decoration-slate-300">{formatCurrency(planned)}</span>
+                                    <span className={`text-xs md:text-sm font-bold ${isOk ? 'text-emerald-700' : 'text-rose-700'}`}>{formatCurrency(actual)}</span>
+                                </div>
+                            </div>
+                            <div className="mt-3 w-full bg-white/50 rounded-full h-1.5 overflow-hidden">
+                                <div className={`h-full transition-all ${isOk ? 'bg-emerald-500' : 'bg-rose-500'}`} style={{ width: `${Math.min(100, percent)}%` }} />
+                            </div>
+                        </div>
+                    );
+                };
+
+                return (
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div className="lg:col-span-5 space-y-6">
+                            <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200">
+                                <h3 className="font-bold text-slate-800 uppercase text-xs md:text-sm tracking-wide mb-6">Definição de Metas (%)</h3>
+                                <div className="space-y-6">
+                                    {[ { id: 'fixed', label: 'Contas Fixas', color: 'text-blue-600', bg: 'accent-blue-500' }, { id: 'variable', label: 'Despesas Variáveis', color: 'text-pink-600', bg: 'accent-pink-500' }, { id: 'investment', label: 'Investimentos', color: 'text-emerald-600', bg: 'accent-emerald-500' } ].map(g => (
+                                        <div key={g.id}>
+                                            <div className="flex justify-between text-xs md:text-sm mb-2 font-semibold text-slate-700">
+                                                <span>{g.label}</span>
+                                                <div className="flex gap-3"><span className="text-slate-400">{formatCurrency(plan[g.id])}</span><span className={g.color}>{goals[g.id]}%</span></div>
+                                            </div>
+                                            <input type="range" min="0" max="100" value={goals[g.id]} onChange={(e) => handleGoalChange(g.id, e.target.value)} className={`w-full h-3 md:h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer ${g.bg}`} />
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-8 pt-6 border-t border-slate-100">
+                                    <div className="flex justify-between text-[10px] md:text-xs font-bold text-slate-500 mb-2 uppercase">
+                                        <span>Uso do Orçamento</span><span className={isExceeding ? 'text-rose-500' : 'text-blue-600'}>{totalGoalPercent}%</span>
+                                    </div>
+                                    <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                                        <div className={`h-full transition-all ${isExceeding ? 'bg-rose-500' : 'bg-blue-500'}`} style={{ width: `${Math.min(100, totalGoalPercent)}%` }} />
+                                    </div>
+                                    {isExceeding && <p className="text-xs text-rose-500 mt-2 text-center">A soma das metas não deve exceder 100%.</p>}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="lg:col-span-7 space-y-6">
+                            <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200">
+                                <h3 className="font-bold text-slate-800 uppercase text-xs md:text-sm tracking-wide text-center mb-4">Distribuição Planejada</h3>
+                                <div className="h-48 w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie data={chartData} cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={4} dataKey="value">
+                                                {chartData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                                            </Pie>
+                                            <RechartsTooltip formatter={(val) => `${val}% do Orçamento`} />
+                                            <Legend iconType="circle" wrapperStyle={{ fontSize: '11px' }}/>
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                            <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200">
+                                <h3 className="font-bold text-slate-800 uppercase text-xs md:text-sm tracking-wide mb-4">Alertas de Categoria</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {renderAlertCard('Contas Fixas', totals.fixos, plan.fixed)}
+                                    {renderAlertCard('Despesas Variáveis', totals.variaveis, plan.variable)}
+                                    {renderAlertCard('Investimentos', totals.investimentos + totals.reservaAtual, plan.investment)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderRenda = () => {
+                const meta = budgetData[currentMonth].categoriesMetadata || DEFAULT_METADATA;
+                const incomeCats = Object.keys(budgetData[currentMonth]).filter(cat => meta[cat] === 'income' || cat === 'Renda Familiar');
+                const currentIncomes = budgetData[currentMonth]['Renda Familiar'] || {};
+                const incomeEntries = Object.entries(currentIncomes);
+                const totalRenda = getCategoryTotal(currentMonth, 'Renda Familiar');
+
+                return (
+                    <div className="max-w-2xl mx-auto">
+                        {currentMonthIdx > 0 && isMonthEmpty && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-blue-100 rounded-lg shrink-0"><Icon name="copy" className="w-5 h-5 text-blue-600" /></div>
+                                    <div>
+                                        <h4 className="font-bold text-blue-800 text-sm">Puxar dados do mês passado?</h4>
+                                        <p className="text-xs text-blue-600">Copie as rendas e contas de {MONTHS[currentMonthIdx - 1]} para agilizar.</p>
+                                    </div>
+                                </div>
+                                <button onClick={handleCopyFromPreviousMonth} className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors shadow-sm">Copiar Dados</button>
+                            </div>
+                        )}
+                        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 md:p-8">
+                            <div className="flex flex-wrap gap-2 justify-between items-center mb-6">
+                                <h3 className="font-bold text-slate-800 uppercase text-xs md:text-sm tracking-widest">Minhas Rendas</h3>
+                                <button onClick={handleAddIncome} className="bg-blue-500 hover:bg-blue-600 text-white px-3 md:px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 shadow-sm">
+                                    <Icon name="plus" className="w-3 h-3" /> Adicionar
+                                </button>
+                            </div>
+                            <div className="space-y-3 min-h-[120px]">
+                                {incomeEntries.length === 0 ? <div className="flex items-center justify-center h-full text-slate-400 italic text-xs md:text-sm py-10">Nenhuma renda cadastrada.</div> : incomeEntries.map(([name, value]) => (
+                                    <EditableRow key={name} name={name} value={value} isIncome={true} onRename={handleRenameIncome} onValueChange={(newVal) => handleValueChange('Renda Familiar', name, newVal)} onDelete={handleDeleteIncome} />
+                                ))}
+                            </div>
+                            <div className="mt-8 pt-6 border-t border-slate-100 flex flex-wrap gap-2 justify-between items-end">
+                                <span className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest">Total Recebido:</span>
+                                <span className="text-2xl md:text-3xl font-bold text-emerald-600">{formatCurrency(totalRenda)}</span>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderGastos = () => {
+                const expenseCategories = Object.keys(budgetData[currentMonth]).filter(cat => {
+                    if (cat === 'goals' || cat === 'itemMetadata' || cat === 'categoriesMetadata') return false;
+                    const config = CATEGORIES_CONFIG[cat] || { type: 'expense' };
+                    const catMetaType = budgetData[currentMonth].categoriesMetadata?.[cat] || config.type || 'expense';
+                    return catMetaType === 'expense' || catMetaType === 'investment';
+                });
+
+                const defaultOrder = Object.keys(CATEGORIES_CONFIG);
+                const defaultCats = expenseCategories.filter(cat => defaultOrder.includes(cat));
+                const customCats = expenseCategories.filter(cat => !defaultOrder.includes(cat)).reverse();
+                const displayCategories = [...customCats, ...defaultCats];
+
+                const fixedExpensesList = [];
+                displayCategories.forEach(cat => {
+                    Object.entries(budgetData[currentMonth][cat]).forEach(([itemName, itemValue]) => {
+                        const type = budgetData[currentMonth].itemMetadata?.[cat]?.[itemName] || 'variable';
+                        if (type === 'fixed') fixedExpensesList.push({ category: cat, name: itemName, value: Number(itemValue) });
+                    });
+                });
+
+                const saldoContaCorrente = totals.renda - (totals.gastos + totals.investimentos + totals.reservaAtual);
+
+                return (
+                    <div className="space-y-6 md:space-y-8">
+                        {currentMonthIdx > 0 && isMonthEmpty && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-blue-100 rounded-lg shrink-0"><Icon name="copy" className="w-5 h-5 text-blue-600" /></div>
+                                    <div>
+                                        <h4 className="font-bold text-blue-800 text-sm">Puxar dados do mês passado?</h4>
+                                        <p className="text-xs text-blue-600">Copie as rendas e contas de {MONTHS[currentMonthIdx - 1]} para agilizar.</p>
+                                    </div>
+                                </div>
+                                <button onClick={handleCopyFromPreviousMonth} className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors shadow-sm">Copiar Dados</button>
+                            </div>
+                        )}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                            <div className="bg-white p-4 md:p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center items-center text-center">
+                                <span className="text-[9px] md:text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-1 flex items-center gap-1"><Icon name="home" className="w-3 h-3"/> Total Gastos Fixos</span>
+                                <span className="text-2xl md:text-3xl font-bold text-rose-600">{formatCurrency(totals.fixos)}</span>
+                            </div>
+                            <div className="bg-white p-4 md:p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center items-center text-center">
+                                <span className="text-[9px] md:text-[10px] font-bold text-orange-400 uppercase tracking-widest mb-1 flex items-center gap-1"><Icon name="smile" className="w-3 h-3"/> Total Gastos Variáveis</span>
+                                <span className="text-2xl md:text-3xl font-bold text-orange-500">{formatCurrency(totals.variaveis)}</span>
+                            </div>
+                            <div className="bg-emerald-50 p-4 md:p-5 rounded-3xl border border-emerald-100 shadow-sm flex flex-col justify-center items-center text-center">
+                                <span className="text-[9px] md:text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Saldo Conta Corrente</span>
+                                <span className="text-2xl md:text-3xl font-bold text-emerald-700">{formatCurrency(saldoContaCorrente)}</span>
+                                <span className="text-[8px] md:text-[9px] text-emerald-600/80 mt-1">Renda - (Gastos + Investimentos)</span>
+                            </div>
+                        </div>
+
+                        <div className="bg-rose-50 border border-rose-100 rounded-3xl p-4 md:p-5 shadow-sm">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 border-b border-rose-100 pb-3 gap-3">
+                                <div>
+                                    <h3 className="font-bold text-rose-800 uppercase text-xs md:text-sm tracking-wide flex items-center gap-2">
+                                        <Icon name="shield-check" className="w-4 h-4 md:w-5 md:h-5" /> Custo de Vida Mensal
+                                    </h3>
+                                    <p className="text-[10px] md:text-[11px] text-rose-600 mt-1">Contas marcadas como "Fixo" nas categorias abaixo.</p>
+                                </div>
+                                <span className="text-rose-700 font-bold bg-rose-200/50 px-3 py-1.5 rounded-lg text-xs md:text-sm whitespace-nowrap self-start sm:self-auto">Total: {formatCurrency(totals.fixos)}</span>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-3">
+                                {fixedExpensesList.map(item => (
+                                    <div key={`${item.category}-${item.name}`} className="bg-white p-2.5 rounded-xl shadow-sm border border-rose-50 flex flex-col justify-between gap-1">
+                                        <span className="text-[8px] md:text-[9px] font-bold text-rose-400 uppercase tracking-widest truncate">{item.category}</span>
+                                        <span className="text-[11px] md:text-xs font-bold text-slate-700 truncate" title={item.name}>{item.name}</span>
+                                        <span className="text-xs md:text-sm font-bold text-rose-600">{formatCurrency(item.value)}</span>
+                                    </div>
+                                ))}
+                                {fixedExpensesList.length === 0 && <div className="col-span-full text-xs text-rose-400 italic py-2">Nenhuma despesa marcada como fixa.</div>}
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 border-b border-slate-200 pb-4">
+                            <div>
+                                <h2 className="text-lg md:text-xl font-bold text-slate-800">Categorias de Despesas</h2>
+                                <p className="text-[11px] md:text-xs text-slate-500 mt-1">Adicione contas e marque-as como FIXO ou VAR (Variável).</p>
+                            </div>
+                            <button onClick={handleAddCategory} className="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 shadow-md w-full md:w-auto">
+                                <Icon name="plus" className="w-4 h-4" /> Nova Categoria
+                            </button>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                            {displayCategories.map(catName => renderEditableCategoryCard(catName, budgetData[currentMonth][catName]))}
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderInvestimento = () => {
+                const meta = budgetData[currentMonth].categoriesMetadata || DEFAULT_METADATA;
+                const investCats = Object.keys(budgetData[currentMonth]).filter(cat => {
+                    if (cat === 'goals' || cat === 'itemMetadata' || cat === 'categoriesMetadata') return false;
+                    const config = CATEGORIES_CONFIG[cat] || { type: 'expense' };
+                    return (budgetData[currentMonth].categoriesMetadata?.[cat] || config.type || 'expense') === 'investment';
+                });
+                
+                let investmentList = [];
+                investCats.forEach(cat => {
+                    Object.entries(budgetData[currentMonth][cat]).forEach(([name, value]) => {
+                        const type = budgetData[currentMonth].itemMetadata?.[cat]?.[name] || (name.toLowerCase().includes('reserva') ? 'reserva' : name.toLowerCase().includes('fixa') ? 'fixa' : 'variavel');
+                        const inst = budgetData[currentMonth].itemMetadata?.[cat]?.[`${name}_inst`] || '';
+                        investmentList.push({ category: cat, name, value: Number(value), type, inst });
+                    });
+                });
+                
+                const totalInvestido = investmentList.filter(item => item.type === 'fixa' || item.type === 'variavel').reduce((acc, item) => acc + item.value, 0);
+                const totalReserva = investmentList.filter(item => item.type === 'reserva').reduce((acc, item) => acc + item.value, 0);
+                const patrimonioLiquido = totalInvestido + totalReserva;
+
+                const typeTotals = { 'Reserva': totalReserva, 'Renda Fixa': 0, 'Renda Variável': 0 };
+                investmentList.filter(item => item.type === 'fixa' || item.type === 'variavel').forEach(item => {
+                    if(item.type === 'fixa') typeTotals['Renda Fixa'] += item.value;
+                    if(item.type === 'variavel') typeTotals['Renda Variável'] += item.value;
+                });
+
+                const chartData = [ { name: 'Reserva', value: typeTotals['Reserva'] }, { name: 'Renda Fixa', value: typeTotals['Renda Fixa'] }, { name: 'Renda Variável', value: typeTotals['Renda Variável'] } ].filter(d => d.value > 0);
+
+                return (
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div className="lg:col-span-8 space-y-6">
+                            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                                <div className="px-5 md:px-8 py-4 md:py-5 flex flex-wrap gap-3 items-center justify-between border-b border-slate-100">
+                                    <h3 className="font-extrabold text-slate-800 uppercase text-xs md:text-[13px] tracking-widest flex items-center gap-2">Meus Ativos</h3>
+                                    <button onClick={() => handleAddItem('Investimento', 'Novo Ativo', 'variavel')} className="text-[10px] md:text-xs font-bold text-white bg-blue-500 px-3 md:px-4 py-2 rounded-xl flex items-center gap-1 hover:bg-blue-600 transition-colors shadow-sm">
+                                        <Icon name="plus" className="w-3 h-3" /> Novo Ativo
+                                    </button>
+                                </div>
+                                <div className="overflow-x-auto p-2">
+                                    <table className="w-full text-sm text-left text-slate-500 min-w-full">
+                                        <thead className="hidden sm:table-header-group text-[10px] text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                                            <tr>
+                                                <th scope="col" className="px-4 sm:px-6 py-4 font-extrabold whitespace-nowrap">Ativo</th>
+                                                <th scope="col" className="px-4 sm:px-6 py-4 font-extrabold whitespace-nowrap">Instituição</th>
+                                                <th scope="col" className="px-4 sm:px-6 py-4 font-extrabold whitespace-nowrap">Tipo</th>
+                                                <th scope="col" className="px-4 sm:px-6 py-4 font-extrabold text-right whitespace-nowrap">Valor</th>
+                                                <th scope="col" className="px-2 sm:px-3 py-4 text-center"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="flex flex-col sm:table-row-group">
+                                            {investmentList.map((item, index) => <InvestmentRow key={`${item.category}-${item.name}`} item={item} onRename={handleRenameItem} onValueChange={handleValueChange} onTypeChange={handleItemTypeChange} onInstChange={handleInstitutionChange} onDelete={handleDeleteItem} />)}
+                                            {investmentList.length === 0 && <tr><td colSpan="5" className="py-8 text-center text-slate-400 italic text-xs sm:text-sm">Nenhum investimento registrado.</td></tr>}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div className="px-5 md:px-6 py-3 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center">
+                                    <span className="text-xs md:text-sm font-bold text-slate-700">Total Investido (Exclui Reserva)</span>
+                                    <span className="text-xs md:text-sm font-bold text-blue-600">{formatCurrency(totalInvestido)}</span>
+                                </div>
+                            </div>
+
+                            <div className="bg-[#f0f7ff] rounded-3xl p-5 md:p-8 border border-blue-100/50">
+                                <h3 className="font-extrabold text-blue-800 mb-2 flex items-center gap-2 text-xs md:text-sm uppercase tracking-widest">
+                                    <Icon name="book-open" className="w-4 h-4 md:w-5 md:h-5 text-blue-600" /> Aprenda Antes de Investir
+                                </h3>
+                                <p className="text-[11px] md:text-xs text-blue-700 mb-6 leading-relaxed">Investir sem conhecimento é como dirigir no escuro. Entenda o risco de cada ativo e nunca invista em algo que você não compreende.</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                                    {[ { title: '1. RESERVA PRIMEIRO', text: 'Garanta sua reserva de emergência antes de ir para a bolsa.' }, { title: '2. DIVERSIFICAÇÃO', text: '"Não coloque todos os ovos na mesma cesta". Divida entre Fixa e Variável.' }, { title: '3. FOCO NO LONGO PRAZO', text: 'Investimentos servem para multiplicar patrimônio no tempo.' }, { title: '4. ESTUDE TAXAS E IR', text: 'Taxas e impostos podem "comer" boa parte da sua rentabilidade.' } ].map((dica, i) => (
+                                        <div key={i} className="bg-white p-4 md:p-5 rounded-2xl border border-blue-50 shadow-sm">
+                                            <h4 className="font-extrabold text-blue-800 text-[10px] md:text-[11px] uppercase tracking-wide mb-1.5">{dica.title}</h4>
+                                            <p className="text-[10px] md:text-[11px] text-slate-500 leading-relaxed">{dica.text}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="lg:col-span-4 space-y-6">
+                            <div className="bg-[#0f172a] rounded-3xl p-6 md:p-8 text-white shadow-xl">
+                                <div className="mb-6">
+                                    <h4 className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Reserva de Emergência</h4>
+                                    <p className="text-2xl md:text-3xl font-black text-blue-500">{formatCurrency(totalReserva)}</p>
+                                </div>
+                                <div className="mb-6 pt-6 border-t border-slate-800">
+                                    <h4 className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Total em Investimentos</h4>
+                                    <p className="text-xl md:text-2xl font-black text-emerald-400">{formatCurrency(totalInvestido)}</p>
+                                </div>
+                                <div className="pt-6 border-t border-slate-800 flex justify-between items-center mt-2">
+                                    <h4 className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Patrimônio Líquido</h4>
+                                    <p className="text-lg md:text-xl font-bold text-white">{formatCurrency(patrimonioLiquido)}</p>
+                                </div>
+                            </div>
+                            <div className="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-slate-200">
+                                <h3 className="font-extrabold text-blue-700 uppercase text-[10px] md:text-[11px] tracking-widest text-center mb-6">Alocação por Tipo</h3>
+                                {chartData.length > 0 ? (
+                                    <>
+                                        <div className="h-48 md:h-52 w-full">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <PieChart>
+                                                    <Pie data={chartData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={4} dataKey="value">
+                                                        {chartData.map((_, i) => <Cell key={i} fill={COLORS_INVEST[i % COLORS_INVEST.length]} />)}
+                                                    </Pie>
+                                                    <RechartsTooltip formatter={(v) => formatCurrency(v)} />
+                                                </PieChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                        <div className="mt-4 space-y-3">
+                                            {chartData.map((entry, i) => (
+                                                <div key={i} className="flex justify-between text-xs items-center p-2">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS_INVEST[i % COLORS_INVEST.length] }} />
+                                                        <span className="text-slate-600 font-bold text-[10px] md:text-[11px] uppercase tracking-wide">{entry.name}</span>
+                                                    </div>
+                                                    <span className="font-extrabold text-slate-800">{formatCurrency(entry.value)}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : <div className="h-40 flex flex-col items-center justify-center text-slate-400 text-xs md:text-sm italic">Nenhum investimento registrado.</div>}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderHistorico = () => {
+                const progressoVal = metrics.reservaTotalAcumulada;
+                const metaIdeal = metrics.metaReserva12m || 1; 
+                const progressoPct = Math.min(100, (progressoVal / metaIdeal) * 100);
+                const falta = Math.max(0, metrics.metaReserva12m - progressoVal);
+
+                return (
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        <div className="lg:col-span-5 space-y-6">
+                            <div className="bg-white p-5 md:p-8 rounded-3xl shadow-sm border border-slate-200">
+                                <h3 className="text-[11px] md:text-[13px] font-extrabold text-blue-600 uppercase tracking-widest mb-6">Meta de Segurança</h3>
+                                <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-6 md:mb-8">
+                                    <div className="flex-1 bg-slate-50 p-4 md:p-5 rounded-2xl border border-slate-100 flex flex-col justify-center">
+                                        <p className="text-[9px] md:text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Segurança (6 Meses)</p>
+                                        <p className="text-xl md:text-2xl font-black text-slate-800">{formatCurrency(metrics.metaReserva6m)}</p>
+                                    </div>
+                                    <div className="flex-1 bg-[#f0f7ff] p-4 md:p-5 rounded-2xl border border-blue-100 flex flex-col justify-center">
+                                        <p className="text-[9px] md:text-[10px] font-bold text-blue-500 mb-1.5 uppercase">Ideal (12 Meses)</p>
+                                        <p className="text-xl md:text-2xl font-black text-blue-600">{formatCurrency(metrics.metaReserva12m)}</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="flex justify-between items-end mb-1.5">
+                                        <div>
+                                            <span className="text-[10px] md:text-[11px] font-extrabold text-slate-700 block uppercase tracking-widest mb-1">Progresso Atual</span>
+                                            <span className="text-[9px] md:text-[11px] italic text-slate-400 font-medium">{formatCurrency(progressoVal)} / {formatCurrency(metrics.metaReserva12m)}</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-lg md:text-xl font-black text-blue-600 block leading-none mb-1.5">{progressoPct.toFixed(0)}%</span>
+                                            <span className="text-[9px] md:text-[10px] font-extrabold text-rose-500 uppercase tracking-wider">Falta: {formatCurrency(falta)}</span>
+                                        </div>
+                                    </div>
+                                    <div className="w-full bg-[#f1f5f9] rounded-xl h-10 md:h-11 mt-4 flex items-center justify-center relative overflow-hidden shadow-inner border border-slate-200/50">
+                                        <div className="absolute left-0 top-0 h-full bg-blue-500 transition-all duration-1000" style={{ width: `${progressoPct}%` }}></div>
+                                        <span className={`relative z-10 text-xs md:text-[13px] font-bold ${progressoPct > 50 ? 'text-white' : 'text-slate-800'}`}>{formatCurrency(progressoVal)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-white p-5 md:p-8 rounded-3xl shadow-sm border border-slate-200">
+                                <h3 className="text-[11px] md:text-[13px] font-extrabold text-slate-800 uppercase tracking-widest mb-6">O que é a reserva?</h3>
+                                <div className="space-y-6">
+                                    <div className="flex gap-3 md:gap-4">
+                                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-[#f0f7ff] flex items-center justify-center shrink-0 border border-blue-100/50"><Icon name="shield-check" className="w-5 h-5 text-blue-500" /></div>
+                                        <div><h4 className="font-extrabold text-slate-800 text-[11px] md:text-xs uppercase tracking-wide">Para que serve?</h4><p className="text-[10px] md:text-[11px] text-slate-500 mt-1.5 leading-relaxed">Cobre imprevistos como demissão ou saúde sem precisar de empréstimos.</p></div>
+                                    </div>
+                                    <div className="flex gap-3 md:gap-4">
+                                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-amber-50 flex items-center justify-center shrink-0 border border-amber-100/50"><Icon name="help-circle" className="w-5 h-5 text-amber-500" /></div>
+                                        <div><h4 className="font-extrabold text-slate-800 text-[11px] md:text-xs uppercase tracking-wide">Quanto guardar?</h4><p className="text-[10px] md:text-[11px] text-slate-500 mt-1.5 leading-relaxed">O ideal é ter entre 6 e 12 meses do seu custo de vida atual.</p></div>
+                                    </div>
+                                    <div className="flex gap-3 md:gap-4">
+                                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100/50"><Icon name="trending-up" className="w-5 h-5 text-emerald-500" /></div>
+                                        <div><h4 className="font-extrabold text-slate-800 text-[11px] md:text-xs uppercase tracking-wide">Onde investir?</h4><p className="text-[10px] md:text-[11px] text-slate-500 mt-1.5 leading-relaxed">Priorize Liquidez Diária (resgate imediato) e Baixo Risco (Tesouro Selic).</p></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="lg:col-span-7">
+                            <div className="bg-white p-4 md:p-8 rounded-3xl shadow-sm border border-slate-200 h-full">
+                                <h3 className="text-[11px] md:text-[13px] font-extrabold text-slate-800 uppercase tracking-widest mb-6">Histórico Mensal</h3>
+                                <div className="overflow-x-auto scrollbar-hide">
+                                    <table className="w-full text-sm text-left min-w-[450px]">
+                                        <thead className="text-[9px] md:text-[10px] text-slate-400 uppercase border-b border-slate-100">
+                                            <tr>
+                                                <th className="pb-3 md:pb-4 font-bold tracking-widest whitespace-nowrap">Mês</th>
+                                                <th className="pb-3 md:pb-4 font-bold tracking-widest whitespace-nowrap">Renda</th>
+                                                <th className="pb-3 md:pb-4 font-bold tracking-widest whitespace-nowrap">Gastos</th>
+                                                <th className="pb-3 md:pb-4 font-bold tracking-widest whitespace-nowrap">Investido</th>
+                                                <th className="pb-3 md:pb-4 font-bold tracking-widest text-right whitespace-nowrap">Sobrou</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {historyData.map((data, index) => (
+                                                <tr key={data.month} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
+                                                    <td className="py-3 md:py-4 font-extrabold text-slate-700 text-[10px] md:text-xs tracking-wide lowercase whitespace-nowrap">{data.month.substring(0, 3)}</td>
+                                                    <td className="py-3 md:py-4 text-emerald-600 font-bold text-[10px] md:text-xs whitespace-nowrap">{formatCurrency(data.renda)}</td>
+                                                    <td className="py-3 md:py-4 text-rose-600 font-bold text-[10px] md:text-xs whitespace-nowrap">{formatCurrency(data.gastos)}</td>
+                                                    <td className="py-3 md:py-4 text-blue-600 font-bold text-[10px] md:text-xs whitespace-nowrap">{formatCurrency(data.investido)}</td>
+                                                    <td className={`py-3 md:py-4 text-right font-black text-xs md:text-sm whitespace-nowrap ${data.saldo >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>{formatCurrency(data.saldo)}</td>
+                                                </tr>
+                                            ))}
+                                            {historyData.length === 0 && <tr><td colSpan="5" className="py-8 text-center text-slate-400 italic text-xs md:text-sm">Nenhum histórico.</td></tr>}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const TABS = [
+                { id: 'dashboard', label: 'Dashboard' }, { id: 'renda', label: 'Renda' }, { id: 'gastos', label: 'Gastos' },
+                { id: 'planejamento', label: 'Planejamento' }, { id: 'investimento', label: 'Investimentos' }, { id: 'historico', label: 'Reserva e Histórico' }
+            ];
+
+            if (loading) return <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc]"><Icon name="loader-2" className="w-10 h-10 text-amber-500 animate-spin mb-4" /><p className="text-slate-500 font-medium text-sm">Sincronizando dados...</p></div>;
+
+            return (
+                <div className="min-h-screen bg-[#f8fafc] text-slate-800 pb-20 font-sans">
+                    {confirmMonthChange !== null && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm px-4">
+                            <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl">
+                                <h3 className="text-lg md:text-xl font-bold text-slate-800 mb-2">Fechar o mês?</h3>
+                                <p className="text-xs md:text-sm text-slate-500 mb-6">Tem certeza que deseja fechar <strong>{MONTHS[currentMonthIdx]}</strong> e ir para o próximo mês?</p>
+                                <div className="flex gap-3 justify-end">
+                                    <button onClick={() => setConfirmMonthChange(null)} className="px-4 py-2 rounded-xl text-xs md:text-sm font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
+                                    <button onClick={() => { setCurrentMonthIdx(confirmMonthChange); setConfirmMonthChange(null); }} className="px-4 py-2 rounded-xl text-xs md:text-sm font-bold text-white bg-amber-500 hover:bg-amber-600">Sim, fechar mês</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <header className="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
+                        <div className="max-w-7xl mx-auto px-4 py-3 md:py-4 flex flex-col lg:flex-row justify-between items-center gap-3 md:gap-4">
+                            <div className="flex items-center justify-between w-full lg:w-auto">
+                                <div className="flex items-center gap-2">
+                                    <div className="relative flex items-center">
+                                        <Icon name="trending-up" className="w-5 h-5 md:w-6 md:h-6 text-amber-500" />
+                                        <div className="absolute -top-1 -left-1 w-2 h-2 bg-yellow-300 rounded-full animate-pulse"></div>
+                                    </div>
+                                    <h1 className="text-xl md:text-2xl font-black text-[#1e293b] tracking-tighter lowercase">SaaS Financeiro</h1>
+                                </div>
+                                <div className="flex lg:hidden items-center gap-1.5 text-[10px] font-medium">
+                                    {errorMsg ? <span className="flex items-center text-rose-500"><Icon name="alert-circle" className="w-3.5 h-3.5" /></span> : saving ? <span className="flex items-center text-slate-500"><Icon name="loader-2" className="w-3.5 h-3.5 animate-spin" /></span> : <span className="flex items-center text-emerald-600"><Icon name="save" className="w-3.5 h-3.5" /></span>}
+                                </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                                <div className="flex items-center justify-between border border-slate-200 bg-slate-50 rounded-lg p-1 w-full sm:w-auto">
+                                    <button onClick={() => setCurrentMonthIdx(m => Math.max(0, m - 1))} disabled={currentMonthIdx === 0} className="p-1.5 md:p-2 disabled:opacity-30 hover:bg-white rounded transition-colors"><Icon name="chevron-left" className="w-4 h-4" /></button>
+                                    <div className="font-bold text-xs md:text-sm text-slate-700 uppercase tracking-widest px-4 md:px-6">{currentMonth}</div>
+                                    <button onClick={() => setConfirmMonthChange(Math.min(11, currentMonthIdx + 1))} disabled={currentMonthIdx === 11} className="p-1.5 md:p-2 disabled:opacity-30 hover:bg-white rounded transition-colors"><Icon name="chevron-right" className="w-4 h-4" /></button>
+                                </div>
+                                <div className="hidden lg:flex items-center gap-2 text-xs font-medium whitespace-nowrap px-2">
+                                    {errorMsg ? <span className="flex items-center gap-1 text-rose-500"><Icon name="alert-circle" className="w-4 h-4" /> {errorMsg}</span> : saving ? <span className="flex items-center gap-1 text-slate-500"><Icon name="loader-2" className="w-4 h-4 animate-spin" /> Salvando...</span> : <span className="flex items-center gap-1 text-emerald-600"><Icon name="save" className="w-4 h-4" /> Sincronizado</span>}
+                                </div>
+                                <div className="flex items-center gap-2 w-full sm:w-auto">
+                                    <button className="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-3 md:px-4 py-2 bg-[#f0f7ff] text-blue-700 border border-blue-200 rounded-lg text-xs md:text-sm font-bold hover:bg-blue-100">
+                                        <Icon name="credit-card" className="w-3.5 h-3.5" /> Assinatura
+                                    </button>
+                                    <button onClick={logout} className="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-3 md:px-4 py-2 bg-rose-50 text-rose-600 border border-rose-200 rounded-lg text-xs md:text-sm font-bold hover:bg-rose-100">
+                                        <Icon name="log-out" className="w-3.5 h-3.5" /> Sair
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="border-t border-slate-100 w-full overflow-x-auto scrollbar-hide">
+                            <div className="max-w-7xl mx-auto px-2 sm:px-4 flex flex-nowrap justify-start lg:justify-center gap-1 sm:gap-4 md:gap-8">
+                                {TABS.map(tab => (
+                                    <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`py-3 md:py-4 px-3 md:px-4 border-b-2 transition-colors whitespace-nowrap text-xs md:text-sm font-bold ${activeTab === tab.id ? 'border-amber-500 text-amber-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}>
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </header>
+                    <main className="max-w-7xl mx-auto px-4 mt-6 md:mt-8">
+                        {activeTab === 'dashboard' && renderDashboard()}
+                        {activeTab === 'renda' && renderRenda()}
+                        {activeTab === 'gastos' && renderGastos()}
+                        {activeTab === 'investimento' && renderInvestimento()}
+                        {activeTab === 'planejamento' && renderPlanejamento()}
+                        {activeTab === 'historico' && renderHistorico()}
+                    </main>
+                </div>
+            );
         }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
