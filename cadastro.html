@@ -4,227 +4,276 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Assinar Premium | Organizador Financeiro Pro</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* --- CONFIGURAÇÃO GERAL E FUNDO DARK --- */
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 20px; /* Adicionado padding para garantir que nunca encoste nas bordas do celular */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #1A1B2E;
-            background: radial-gradient(circle at top center, #2A2B4E 0%, #1A1B2E 100%);
-            color: #fff;
-            box-sizing: border-box; /* Garante que o padding não aumente o tamanho da tela */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            overflow: hidden;
+            /* Fundo sutil e elegante idêntico ao do login */
+            background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+        }
+        
+        .clean-card {
+            background: #ffffff;
+            border-radius: 2rem;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05), 0 0 20px 0 rgba(255, 255, 255, 0.5) inset;
+            border: 1px solid rgba(255, 255, 255, 0.8);
         }
 
-        /* --- O CARTÃO (CARD) --- */
-        .card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 40px 32px;
-            border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            text-align: center;
-            width: 100%;
-            max-width: 400px;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-sizing: border-box; /* Fundamental para telas pequenas */
-        }
-
-        h2 { color: #fff; margin: 0 0 12px 0; font-size: 28px; font-weight: 700; }
-        p.subtitle { color: #A0AEC0; font-size: 15px; margin-bottom: 36px; line-height: 1.5; }
-
-        /* --- INPUTS E LABEL --- */
-        .input-group { margin-bottom: 20px; text-align: left; width: 100%; }
-        label { display: block; font-size: 13px; font-weight: 600; color: #E2E8F0; margin-bottom: 8px; }
-
-        /* Container para posicionar o olhinho */
-        .password-container {
-            position: relative;
-            display: flex;
-            align-items: center;
-            width: 100%;
-        }
-
-        input {
-            width: 100%;
-            padding: 14px 16px;
-            padding-right: 45px; 
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            font-size: 16px;
-            color: #fff;
-            box-sizing: border-box;
-            transition: all 0.2s ease;
-            outline: none;
-        }
-
-        input::placeholder { color: #718096; }
-        input:focus {
-            border-color: #8B5CF6;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
-            background: rgba(255, 255, 255, 0.12);
-        }
-
-        /* --- ÍCONE DO OLHO --- */
-        .eye-icon {
+        /* Animação das esferas de fundo bem sutis */
+        .blob {
             position: absolute;
-            right: 15px;
-            cursor: pointer;
-            color: #A0AEC0;
-            transition: color 0.2s;
-            display: flex; /* Melhora alinhamento vertical */
-            align-items: center;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 64, 161, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
+            border-radius: 50%;
+            z-index: -1;
+            animation: move 25s infinite alternate ease-in-out;
         }
-        .eye-icon:hover { color: #fff; }
 
-        /* --- BOTÃO --- */
-        button {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(to right, #8B5CF6, #6D28D9);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            margin-top: 24px;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 15px -3px rgba(109, 40, 217, 0.4);
-            box-sizing: border-box;
+        @keyframes move {
+            from { transform: translate(-10%, -10%) scale(1); }
+            to { transform: translate(15%, 15%) scale(1.1); }
         }
-        button:hover { filter: brightness(1.15); transform: translateY(-2px); }
 
-        #feedback { font-size: 14px; margin-top: 20px; min-height: 20px; font-weight: 500; }
-        .link-login { margin-top: 28px; display: block; font-size: 14px; color: #A0AEC0; text-decoration: none; }
-        .link-login:hover { color: #8B5CF6; }
-        .link-login b { color: #fff; }
-
-        /* --- RESPONSIVIDADE PARA CELULARES --- */
-        @media (max-width: 480px) {
-            .card {
-                padding: 30px 20px; /* Reduz o espaçamento interno para caber em telas menores */
-            }
-            h2 {
-                font-size: 24px; /* Título um pouco menor no celular */
-            }
-            p.subtitle {
-                font-size: 14px;
-            }
-            input {
-                font-size: 16px; /* Mantém 16px para evitar que o iOS dê zoom automático ao clicar no input */
-            }
-            button {
-                padding: 14px;
-            }
+        /* Estilos para animação do Toast */
+        .toast-enter {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        .toast-enter-active {
+            transform: translateY(0);
+            opacity: 1;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .toast-leave {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .toast-leave-active {
+            transform: translateY(-100%);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
     </style>
 </head>
-<body>
+<body class="min-h-[100dvh] w-full flex items-center justify-center p-4 sm:p-6 relative">
+    
+    <!-- Container para Notificações (Toasts) -->
+    <div id="toast-container" class="fixed top-6 right-6 z-50 flex flex-col gap-3"></div>
 
-    <div class="card">
-        <h2>🚀 Crie sua conta Premium</h2>
-        <p class="subtitle">Organize suas finanças com o poder total da nossa plataforma.</p>
+    <div class="blob top-0 left-0"></div>
+    <div class="blob bottom-0 right-0" style="animation-direction: alternate-reverse; animation-duration: 30s;"></div>
+
+    <!-- main wrapper com mx-auto e w-full para centralização absoluta -->
+    <main class="w-full max-w-[400px] mx-auto z-10 flex flex-col items-center justify-center">
         
-        <div class="input-group">
-            <label for="email">E-mail</label>
-            <input type="email" id="email" placeholder="seu@email.com">
+        <div class="w-full text-center mb-6 sm:mb-8 flex flex-col items-center justify-center">
+            <!-- Logo principal -->
+            <img src="logo.png" alt="Lumis Logo" class="w-48 sm:w-60 h-auto object-contain">
+            
+            <h2 class="text-[12px] sm:text-[13px] font-extrabold text-[#64748b] uppercase tracking-[0.15em] relative z-10 -mt-6 sm:-mt-10">
+                Organizador Financeiro
+            </h2>
         </div>
 
-        <div class="input-group">
-            <label for="password">Senha</label>
-            <div class="password-container">
-                <input type="password" id="password" placeholder="Sua senha secreta">
-                <span class="eye-icon" onclick="togglePassword()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="eyeSvg"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                </span>
+        <div class="clean-card w-full p-6 sm:p-10">
+            
+            <!-- Título do Formulário -->
+            <div class="text-center mb-6 sm:mb-8">
+                <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800 mb-2">Crie sua conta Premium</h3>
+                <p class="text-[13px] sm:text-sm text-slate-500 font-medium">Organize suas finanças com o poder total da nossa plataforma.</p>
+            </div>
+
+            <div class="space-y-5 sm:space-y-6 w-full">
+                
+                <div class="input-group w-full">
+                    <label for="email" class="block text-left text-[11px] font-extrabold uppercase tracking-wider text-[#64748b] mb-2">Seu melhor E-mail</label>
+                    <div class="relative group w-full">
+                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 group-focus-within:text-[#0040A1] transition-colors">
+                            <i data-lucide="mail" class="w-5 h-5"></i>
+                        </span>
+                        <input type="email" id="email" 
+                            class="block w-full pl-12 pr-4 py-3.5 bg-white border-2 border-slate-100 rounded-2xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-0 focus:border-[#0040A1] transition-colors placeholder:text-slate-300 placeholder:font-normal" 
+                            placeholder="exemplo@email.com">
+                    </div>
+                </div>
+
+                <div class="input-group w-full">
+                    <label for="senha" class="block text-left text-[11px] font-extrabold uppercase tracking-wider text-[#64748b] mb-2">Crie uma Senha</label>
+                    <div class="relative group w-full">
+                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 group-focus-within:text-[#0040A1] transition-colors">
+                            <i data-lucide="lock" class="w-5 h-5"></i>
+                        </span>
+                        
+                        <input type="password" id="senha" 
+                            class="block w-full pl-12 pr-12 py-3.5 bg-white border-2 border-slate-100 rounded-2xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-0 focus:border-[#0040A1] transition-colors placeholder:text-slate-300 placeholder:font-normal" 
+                            placeholder="••••••••">
+                            
+                        <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-[#0040A1] cursor-pointer focus:outline-none transition-colors">
+                            <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <button onclick="criarContaEPagar()" id="btnCadastro" class="w-full py-3.5 sm:py-4 mt-4 bg-gradient-to-b from-[#060A1F] to-[#0040A1] text-white rounded-2xl font-bold text-[14px] sm:text-[15px] shadow-lg shadow-[#0040A1]/30 hover:to-[#003080] hover:from-[#040714] hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-3 group">
+                    <span>Continuar para Pagamento</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                </button>
             </div>
         </div>
         
-        <button onclick="criarContaEPagar()">
-            Continuar para Pagamento ➔
-        </button>
-        
-        <p id="feedback"></p>
-        
-        <a href="login.html" class="link-login">Já possui uma conta? <b>Fazer Login</b></a>
-    </div>
+        <div class="mt-6 sm:mt-8 w-full text-center text-[12px] sm:text-[13px] text-slate-600">
+            <span>Já possui uma conta?</span>
+            <br>
+            <a href="index.html" class="text-[#0040A1] font-bold mt-1 inline-block hover:underline transition-all">
+                Fazer Login ➔
+            </a>
+        </div>
 
+        <div class="mt-8 sm:mt-10 w-full text-center">
+            <p class="text-[#64748b] text-[9px] sm:text-[10px] uppercase tracking-[0.2em] font-extrabold">
+                © 2026 Lumis
+            </p>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // --- CONFIGURAÇÃO ---
-        const supabaseUrl = 'https://izmdjkalwgupuehrbcxm.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6bWRqa2Fsd2d1cHVlaHJiY3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDkwNTUsImV4cCI6MjA4NTgyNTA1NX0.w3FW5oORqiEjT0Xj3d3777KfE0xl2zm0ogezpfN3Gss';
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-        const LINK_DO_STRIPE = "https://buy.stripe.com/test_28E4gB89g0EN075gaqcs800"; 
+      // Inicializa ícones Lucide
+      lucide.createIcons();
 
-        // --- FUNÇÃO DO OLHINHO ---
-        function togglePassword() {
-            const passwordInput = document.getElementById('password');
-            const eyeSvg = document.getElementById('eyeSvg');
-            
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                // Muda ícone para "olho fechado"
-                eyeSvg.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M1 1l22 22"></path><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>';
-            } else {
-                passwordInput.type = 'password';
-                // Muda ícone para "olho aberto"
-                eyeSvg.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
-            }
+      // Configurações do Supabase e Stripe
+      const supabaseUrl = 'https://izmdjkalwgupuehrbcxm.supabase.co';
+      const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6bWRqa2Fsd2d1cHVlaHJiY3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNDkwNTUsImV4cCI6MjA4NTgyNTA1NX0.w3FW5oORqiEjT0Xj3d3777KfE0xl2zm0ogezpfN3Gss';
+      const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+      const LINK_DO_STRIPE = "https://buy.stripe.com/test_28E4gB89g0EN075gaqcs800";
+
+      // Sistema Customizado de Notificação (Toast)
+      function showToast(message, type = 'error') {
+          const container = document.getElementById('toast-container');
+          const toast = document.createElement('div');
+          
+          const bgColors = {
+              error: 'bg-red-500',
+              success: 'bg-emerald-500',
+              warning: 'bg-amber-500'
+          };
+          
+          const icons = {
+              error: 'alert-circle',
+              success: 'check-circle',
+              warning: 'alert-triangle'
+          };
+
+          toast.className = `${bgColors[type]} text-white px-5 py-3.5 rounded-xl shadow-xl flex items-center gap-3 font-medium text-sm toast-enter w-max max-w-sm ml-auto`;
+          toast.innerHTML = `
+            <i data-lucide="${icons[type]}" class="w-5 h-5 flex-shrink-0"></i> 
+            <span>${message}</span>
+          `;
+          
+          container.appendChild(toast);
+          lucide.createIcons();
+
+          requestAnimationFrame(() => {
+              toast.classList.remove('toast-enter');
+              toast.classList.add('toast-enter-active');
+          });
+
+          setTimeout(() => {
+              toast.classList.remove('toast-enter-active');
+              toast.classList.add('toast-leave-active');
+              setTimeout(() => {
+                  toast.remove();
+              }, 300);
+          }, 4000);
+      }
+
+      // Alternar visualização da senha
+      function togglePassword() {
+        const input = document.getElementById('senha');
+        const icon = document.getElementById('eyeIcon');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.innerHTML = '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>';
+        } else {
+            input.type = 'password';
+            icon.innerHTML = '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>';
+        }
+      }
+
+      // Função de Cadastro
+      async function criarContaEPagar() {
+        const email = document.getElementById('email').value.trim();
+        const senha = document.getElementById('senha').value;
+        const btn = document.getElementById('btnCadastro');
+
+        if (!email || !senha) {
+            showToast("Por favor, preencha todos os campos para continuar.", "warning");
+            return;
         }
 
-        // --- LÓGICA DE CADASTRO ---
-        async function criarContaEPagar() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const feedback = document.getElementById('feedback');
+        // Estado de Loading no botão
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>Criando conta...</span>`;
+        btn.disabled = true;
+        btn.classList.add('opacity-90', 'cursor-not-allowed');
 
-            if (!email || !password) {
-                feedback.style.color = "#F87171";
-                feedback.innerText = "Por favor, preencha todos os campos.";
-                return;
-            }
-
-            feedback.style.color = "#8B5CF6";
-            feedback.innerText = "Criando sua conta...";
-
+        try {
             const { data, error } = await supabaseClient.auth.signUp({
                 email: email,
-                password: password
+                password: senha
             });
 
             if (error) {
-                // Tratamento de erro de e-mail duplicado
+                // Tratamento específico de e-mail já existente
                 if (error.message.includes("already registered") || error.message.includes("already exists")) {
-                    feedback.style.color = "#F59E0B"; 
-                    feedback.innerHTML = `⚠️ Esse e-mail já tem conta!<br><a href="login.html" style="color: #F59E0B; font-weight: bold; text-decoration: underline;">Fazer Login</a>`;
+                    showToast("Esse e-mail já está cadastrado. Faça login!", "warning");
+                    setTimeout(() => { window.location.href = "index.html"; }, 2500);
                 } else {
-                    feedback.style.color = "#F87171";
-                    feedback.innerText = "Erro: " + error.message;
+                    showToast("Erro ao criar conta: " + error.message, "error");
                 }
-            } else {
-                feedback.style.color = "#34D399";
-                feedback.innerText = "Sucesso! Redirecionando...";
-                if (data?.user?.id) {
-                    const usuarioId = data.user.id;
-                    setTimeout(() => {
-                        window.location.href = `${LINK_DO_STRIPE}?client_reference_id=${usuarioId}`;
-                    }, 1000);
-                } else {
-                    // Fallback se a confirmação de e-mail estiver ligada
-                    feedback.innerText = "Verifique seu e-mail para confirmar!";
-                }
+                restaurarBotao();
+                return;
             }
-        }
-    </script>
 
+            showToast("Sucesso! Redirecionando para o pagamento...", "success");
+            
+            if (data?.user?.id) {
+                const usuarioId = data.user.id;
+                setTimeout(() => {
+                    window.location.href = `${LINK_DO_STRIPE}?client_reference_id=${usuarioId}`;
+                }, 1500);
+            } else {
+                showToast("Verifique seu e-mail para confirmar a conta!", "warning");
+                restaurarBotao();
+            }
+
+        } catch (err) {
+            console.error(err);
+            showToast("Erro de conexão. Verifique sua internet.", "error");
+            restaurarBotao();
+        }
+
+        function restaurarBotao() {
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+            btn.classList.remove('opacity-90', 'cursor-not-allowed');
+            lucide.createIcons(); // Recriar o ícone da seta
+        }
+      }
+
+      // Permitir cadastro ao pressionar a tecla Enter
+      document.addEventListener('keypress', (e) => { 
+          if (e.key === 'Enter') criarContaEPagar(); 
+      });
+    </script>
 </body>
 </html>
