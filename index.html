@@ -12,23 +12,15 @@
     </script>
 
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://unpkg.com/lucide@latest"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* Utilitário para esconder scrollbar mantendo o scroll */
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* Evita selects com estilo padrão feio no iOS/Safari */
         select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
-        
-        /* Accent color fallback para sliders cross-browser */
         input[type=range] { accent-color: #3b82f6; }
     </style>
 </head>
@@ -275,9 +267,10 @@
             try {
                 if (!AppState.user) return;
                 
+                // CORREÇÃO: Removido o .ups4 que estava causando o erro
                 const { error } = await supabaseClient
                     .from('dados_financeiros')
-                    .ups4.upsert({ 
+                    .upsert({ 
                         id: AppState.user.id, 
                         payload: AppState.budgetData,
                         updated_at: new Date()
@@ -575,6 +568,8 @@
         function renderDashboard() {
             const { totals, metrics, historyData } = calculateMetrics();
             const yearlyBarData = MONTHS.map(m => { let r = 0, g = 0, i = 0; if(AppState.budgetData[AppState.currentYear] && AppState.budgetData[AppState.currentYear][m]) { Object.keys(AppState.budgetData[AppState.currentYear][m]).forEach(cat => { if (['goals', 'itemMetadata', 'categoriesMetadata'].includes(cat)) return; const type = AppState.budgetData[AppState.currentYear][m].categoriesMetadata?.[cat] || CATEGORIES_CONFIG[cat]?.type || 'expense'; const catTot = getCategoryTotal(AppState.currentYear, m, cat); if (type === 'income') r += catTot; else if (type === 'investment') i += catTot; else g += catTot; }); } return { name: m.substring(0, 3), Rendimentos: r, Gastos: g, Investido: i, Saldo: r - (g + i) }; });
+            // CORREÇÃO DE SINTAXE: Removido o espaço de 'saldoConta Corrente'
+            const saldoContaCorrente = totals.renda - (totals.gastos + totals.investimentos + totals.reservaAtual);
             const catGastos = Object.keys(AppState.currentData).filter(cat => !['goals', 'itemMetadata', 'categoriesMetadata'].includes(cat) && (AppState.currentData.categoriesMetadata?.[cat] || CATEGORIES_CONFIG[cat]?.type || 'expense') === 'expense').map(cat => ({ name: cat, value: getCategoryTotal(AppState.currentYear, AppState.currentMonth, cat) })).filter(d => d.value > 0).sort((a, b) => b.value - a.value);
             const fixoVar = [{ name: 'Contas Fixas', value: totals.fixos }, { name: 'Despesas Variáveis', value: totals.variaveis }].filter(d => d.value > 0);
             const incomeData = [], ccData = [], investData = [];
@@ -629,7 +624,7 @@
 
         function renderGastos() {
             const { totals } = calculateMetrics(); const y = AppState.currentYear; const m = AppState.currentMonth;
-            const saldoConta Corrente = totals.renda - (totals.gastos + totals.investimentos + totals.reservaAtual);
+            const saldoContaCorrente = totals.renda - (totals.gastos + totals.investimentos + totals.reservaAtual);
             const isMonthEmpty = totals.renda === 0 && totals.gastos === 0 && (totals.investimentos + totals.reservaAtual) === 0;
 
             const expenseCats = Object.keys(AppState.currentData).filter(cat => {
