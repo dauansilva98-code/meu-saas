@@ -11,7 +11,9 @@
         
         body { 
             font-family: 'Inter', sans-serif; 
-            overflow: hidden;
+            /* Correção: Permite rolar a página no celular e evita corte lateral */
+            overflow-x: hidden;
+            overflow-y: auto; 
             /* Fundo sutil e elegante inspirado no seu mockup */
             background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
         }
@@ -65,22 +67,33 @@
     <!-- Container para Notificações (Toasts) -->
     <div id="toast-container" class="fixed top-6 right-6 z-50 flex flex-col gap-3"></div>
 
-    <div class="blob top-0 left-0"></div>
-    <div class="blob bottom-0 right-0" style="animation-direction: alternate-reverse; animation-duration: 30s;"></div>
+    <!-- Bolhas agora com 'fixed' para acompanhar a tela ao rolar no celular -->
+    <div class="blob top-0 left-0 fixed"></div>
+    <div class="blob bottom-0 right-0 fixed" style="animation-direction: alternate-reverse; animation-duration: 30s;"></div>
 
-    <!-- main wrapper com mx-auto, w-full e tamanho ideal para PC/Celular -->
-    <main class="w-full max-w-[420px] mx-auto z-10 flex flex-col items-center justify-center">
-        
+    <!-- m-auto centraliza de forma inteligente: fica no meio no PC, mas scrolla no celular -->
+    <main class="w-full max-w-[420px] m-auto z-10 flex flex-col items-center justify-center py-6 sm:py-8">
+
+        <!-- Logo e Título movidos para FORA do cartão branco -->
         <div class="w-full text-center mb-6 sm:mb-8 flex flex-col items-center justify-center">
-            <!-- Logo principal com mx-auto garantindo o centro exato -->
-            <img src="logo.png" alt="Lumis Logo" class="w-48 sm:w-60 h-auto object-contain mx-auto">
             
-            <h2 class="w-full text-center text-[12px] sm:text-[13px] font-extrabold text-[#64748b] uppercase tracking-[0.15em] relative z-10 -mt-6 sm:-mt-8">
+            <!-- Logo ajustada fora do card -->
+            <img src="logo.png" alt="Lumis Logo" class="w-48 sm:w-56 h-auto object-contain mx-auto">
+            
+            <!-- Texto Organizador Financeiro com azul da paleta e margem normal (removidas as margens negativas para evitar sobreposição) -->
+            <h2 class="w-full text-center text-[12px] sm:text-[13px] font-extrabold text-[#0040A1] uppercase tracking-[0.2em] relative z-10 mt-2 sm:mt-3">
                 Organizador Financeiro
             </h2>
         </div>
 
         <div class="clean-card w-full p-6 sm:p-10">
+            
+            <!-- Apenas os textos de boas-vindas permanecem DENTRO do cartão branco -->
+            <div class="text-center mb-6 sm:mb-8 flex flex-col items-center justify-center">
+                <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800 mb-2">Acesse sua conta</h3>
+                <p class="text-[13px] sm:text-sm text-slate-500 font-medium">Bem-vindo de volta ao seu painel financeiro.</p>
+            </div>
+
             <!-- text-left aqui garante que os campos e os textos se alinhem à esquerda -->
             <div class="space-y-5 sm:space-y-6 w-full text-left">
                 
