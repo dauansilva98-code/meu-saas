@@ -43,6 +43,13 @@
 
         // --- CONSTANTES E CONFIGURAÇÕES PADRÃO ---
         const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        const ICON_MAP = { Wallet: 'wallet', Home: 'home', HeartPulse: 'heart-pulse', Bus: 'bus', Car: 'car', Church: 'church', Smile: 'smile', TrendingUp: 'trending-up', CreditCard: 'credit-card', Receipt: 'receipt' };
+
+        const DEFAULT_METADATA = {
+            'Renda Familiar': 'income', 'Casa': 'expense', 'Saúde': 'expense', 'Automóvel': 'expense',
+            'Transporte': 'expense', 'Cartão de Crédito': 'expense', 'Investimento': 'investment'
+        };
+
         const CATEGORIES_CONFIG = {
             'Renda Familiar': { icon: 'Wallet', type: 'income', items: ['Salário Principal', 'Salário Secundário', 'Renda Extra', 'Outros'] },
             'Casa': { icon: 'Home', type: 'expense', items: ['Aluguel / Prestação', 'Condomínio', 'Luz', 'Água', 'Internet', 'Mercado', 'Gás'] },
@@ -54,30 +61,43 @@
             'Investimento': { icon: 'TrendingUp', type: 'investment', items: ['Reserva de Emergência', 'Renda Fixa', 'Renda Variável'] },
         };
 
-        const DEFAULT_METADATA = { 'Renda Familiar': 'income', 'Casa': 'expense', 'Saúde': 'expense', 'Automóvel': 'expense', 'Transporte': 'expense', 'Cartão de Crédito': 'expense', 'Investimento': 'investment' };
         const COLORS_GERAL = ['#0ea5e9', '#ec4899', '#10b981', '#8b5cf6', '#f59e0b', '#6366f1', '#f43f5e', '#14b8a6'];
         const COLORS_INCOME = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e', '#6366f1'];
         const COLORS_CC = ['#8b5cf6', '#f59e0b', '#ec4899', '#10b981', '#3b82f6', '#f43f5e', '#14b8a6'];
         const COLORS_INVEST = ['#1e293b', '#f59e0b', '#3b82f6', '#10b981']; 
-        const GOAL_COLORS = { blue: { text: 'text-blue-600', hex: '#3b82f6' }, pink: { text: 'text-pink-600', hex: '#ec4899' }, emerald: { text: 'text-emerald-600', hex: '#10b981' }, purple: { text: 'text-purple-600', hex: '#a855f7' }, amber: { text: 'text-amber-500', hex: '#f59e0b' }, orange: { text: 'text-orange-500', hex: '#f97316' }, teal: { text: 'text-teal-500', hex: '#14b8a6' } };
+        
+        const GOAL_COLORS = {
+            blue: { text: 'text-blue-600', hex: '#3b82f6' }, pink: { text: 'text-pink-600', hex: '#ec4899' },
+            emerald: { text: 'text-emerald-600', hex: '#10b981' }, purple: { text: 'text-purple-600', hex: '#a855f7' },
+            amber: { text: 'text-amber-500', hex: '#f59e0b' }, orange: { text: 'text-orange-500', hex: '#f97316' },
+            teal: { text: 'text-teal-500', hex: '#14b8a6' }
+        };
         const DYNAMIC_COLORS = ['purple', 'amber', 'orange', 'teal'];
         const DEFAULT_FIXED_ITEMS = ['Condomínio', 'Luz', 'Água', 'Internet', 'Aluguel', 'Prestação', 'Plano de Saúde', 'Parcela do Carro', 'IPVA', 'Seguro', 'Assinaturas'];
         const isDefaultFixed = (itemName) => DEFAULT_FIXED_ITEMS.some(keyword => itemName.toLowerCase().includes(keyword.toLowerCase()));
 
-        // --- ESTADO ---
-        const currentYearString = new Date().getFullYear().toString();
-        const AppState = { user: null, budgetData: { [currentYearString]: generateEmptyYearData() }, currentYear: currentYearString, currentMonthIdx: new Date().getMonth(), activeTab: 'dashboard', loading: true, saving: false, errorMsg: null, confirmMonthChange: null, charts: {}, get currentMonth() { return MONTHS[this.currentMonthIdx]; }, get currentData() { return this.budgetData[this.currentYear][this.currentMonth]; } };
-
         function generateEmptyYearData() {
             let data = {};
             MONTHS.forEach(m => {
-                data[m] = { goals: { fixed: { label: 'Contas Fixas', value: 50, color: 'blue' }, variable: { label: 'Despesas Variáveis', value: 30, color: 'pink' }, investment: { label: 'Investimentos', value: 20, color: 'emerald' } }, itemMetadata: {}, categoriesMetadata: { ...DEFAULT_METADATA } };
+                data[m] = { 
+                    goals: { 
+                        fixed: { label: 'Contas Fixas', value: 50, color: 'blue' }, 
+                        variable: { label: 'Despesas Variáveis', value: 30, color: 'pink' }, 
+                        investment: { label: 'Investimentos', value: 20, color: 'emerald' } 
+                    }, 
+                    itemMetadata: {}, 
+                    categoriesMetadata: { ...DEFAULT_METADATA } 
+                };
                 Object.keys(CATEGORIES_CONFIG).forEach(cat => {
-                    data[m][cat] = {}; data[m].itemMetadata[cat] = {};
+                    data[m][cat] = {};
+                    data[m].itemMetadata[cat] = {};
                     CATEGORIES_CONFIG[cat].items.forEach(item => {
                         data[m][cat][item] = 0;
-                        if (CATEGORIES_CONFIG[cat].type === 'investment') data[m].itemMetadata[cat][item] = item.toLowerCase().includes('reserva') ? 'reserva' : item.toLowerCase().includes('fixa') ? 'fixa' : 'variavel';
-                        else data[m].itemMetadata[cat][item] = isDefaultFixed(item) ? 'fixed' : 'variable';
+                        if (CATEGORIES_CONFIG[cat].type === 'investment') {
+                            data[m].itemMetadata[cat][item] = item.toLowerCase().includes('reserva') ? 'reserva' : item.toLowerCase().includes('fixa') ? 'fixa' : 'variavel';
+                        } else {
+                            data[m].itemMetadata[cat][item] = isDefaultFixed(item) ? 'fixed' : 'variable';
+                        }
                     });
                 });
             });
@@ -86,30 +106,56 @@
 
         function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
         function safeId(str) { return str.toString().replace(/[^a-z0-9]/gi, '-').toLowerCase(); }
+
+        // --- ESTADO GLOBAL DA APLICAÇÃO ---
+        const currentYearString = new Date().getFullYear().toString();
+        
+        const AppState = {
+            user: null,
+            budgetData: { [currentYearString]: generateEmptyYearData() },
+            currentYear: currentYearString,
+            currentMonthIdx: new Date().getMonth(),
+            activeTab: 'dashboard',
+            loading: true,
+            saving: false,
+            errorMsg: null,
+            confirmMonthChange: null,
+            charts: {}, 
+            get currentMonth() { return MONTHS[this.currentMonthIdx]; },
+            get currentData() { return this.budgetData[this.currentYear][this.currentMonth]; }
+        };
+
+        // --- FUNÇÕES UTILITÁRIAS ---
         function formatCurrency(value) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0); }
         function parseCurrencyString(val) { const raw = String(val).replace(/\D/g, ''); return raw ? Number(raw) / 100 : 0; }
         function formatCurrencyInput(val) { const num = Number(val); if (isNaN(num)) return '0,00'; return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num); }
         function getCategoryIconAndColor(catName) { if (CATEGORIES_CONFIG[catName]) return { ...CATEGORIES_CONFIG[catName], color: 'text-slate-600', bg: 'bg-slate-100' }; return { icon: 'Receipt', color: 'text-slate-600', bg: 'bg-slate-100', type: 'expense' }; }
         function getCategoryTotal(year, month, category) { if (!AppState.budgetData[year] || !AppState.budgetData[year][month] || !AppState.budgetData[year][month][category]) return 0; return Object.values(AppState.budgetData[year][month][category]).reduce((acc, val) => acc + (Number(val) || 0), 0); }
 
+        // --- CÁLCULOS E MÉTRICAS ---
         function calculateMetrics() {
             const calcMonth = (y, m) => {
                 let renda = 0, gastos = 0, fixos = 0, variaveis = 0, investimentos = 0, reservaAtual = 0;
                 if(!AppState.budgetData[y] || !AppState.budgetData[y][m]) return { renda, gastos, saldo: 0, fixos, variaveis, investimentos, reservaAtual };
+
                 Object.keys(AppState.budgetData[y][m]).forEach(cat => {
                     if (['goals', 'itemMetadata', 'categoriesMetadata'].includes(cat)) return;
                     const config = CATEGORIES_CONFIG[cat] || { type: 'expense' };
                     const catMetaType = AppState.budgetData[y][m].categoriesMetadata?.[cat] || config.type || 'expense';
-                    if (catMetaType === 'income') renda += getCategoryTotal(y, m, cat);
-                    else if (catMetaType === 'investment') {
+
+                    if (catMetaType === 'income' || cat === 'Renda Familiar') {
+                        renda += getCategoryTotal(y, m, cat);
+                    } else if (catMetaType === 'investment' || cat === 'Investimento') {
                         Object.entries(AppState.budgetData[y][m][cat]).forEach(([item, val]) => {
                             const numVal = Number(val) || 0;
-                            const type = AppState.budgetData[y][m].itemMetadata?.[cat]?.[item] || 'variavel';
-                            if(type === 'reserva') reservaAtual += numVal; else investimentos += numVal;
+                            const type = AppState.budgetData[y][m].itemMetadata?.[cat]?.[item] || (item.toLowerCase().includes('reserva') ? 'reserva' : item.toLowerCase().includes('fixa') ? 'fixa' : 'variavel');
+                            if(type === 'reserva') reservaAtual += numVal;
+                            else investimentos += numVal;
                         });
                     } else {
                         Object.entries(AppState.budgetData[y][m][cat]).forEach(([item, val]) => {
-                            const numVal = Number(val) || 0; gastos += numVal;
+                            const numVal = Number(val) || 0;
+                            gastos += numVal;
                             const type = AppState.budgetData[y][m].itemMetadata?.[cat]?.[item] || 'variable';
                             if (type === 'fixed') fixos += numVal; else variaveis += numVal;
                         });
@@ -117,199 +163,634 @@
                 });
                 return { renda, gastos, saldo: renda - (gastos + investimentos + reservaAtual), fixos, variaveis, investimentos, reservaAtual };
             };
+
             const current = calcMonth(AppState.currentYear, AppState.currentMonth);
-            let acumulado = 0, reservaTotalAcumulada = 0; const historyList = [];
+            let acumulado = 0, reservaTotalAcumulada = 0;
+            const historyList = [];
+
             for (let i = 0; i < 12; i++) {
-                const mData = calcMonth(AppState.currentYear, MONTHS[i]); acumulado += mData.saldo; reservaTotalAcumulada += mData.reservaAtual;
+                const mData = calcMonth(AppState.currentYear, MONTHS[i]);
+                acumulado += mData.saldo;
+                reservaTotalAcumulada += mData.reservaAtual;
                 historyList.push({ month: MONTHS[i], renda: mData.renda, gastos: mData.gastos, investido: mData.investimentos + mData.reservaAtual, saldo: mData.saldo });
             }
-            return { totals: { ...current, acumulado }, metrics: { custoDeVida: current.fixos, metaReserva6m: current.fixos * 6, metaReserva12m: current.fixos * 12, reservaTotalAcumulada }, historyData: historyList };
+
+            const custoDeVida = current.fixos;
+            return {
+                totals: { ...current, acumulado },
+                metrics: { custoDeVida, metaReserva6m: custoDeVida * 6, metaReserva12m: custoDeVida * 12, reservaTotalAcumulada },
+                historyData: historyList
+            };
         }
 
-        // --- BANCO DE DADOS ---
+        // --- BANCO DE DADOS (SUPABASE) ---
         function updateSyncUI() {
-            const headerDesk = document.getElementById('sync-status-desktop'); const headerMob = document.getElementById('sync-status-mobile');
-            let statusHTML = AppState.errorMsg ? `<span class="flex items-center gap-1 text-rose-500"><i data-lucide="alert-circle" class="w-4 h-4"></i> <span class="hidden lg:inline">${AppState.errorMsg}</span></span>` : AppState.saving ? `<span class="flex items-center gap-1 text-slate-500"><i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> <span class="hidden lg:inline">Salvando...</span></span>` : `<span class="flex items-center gap-1 text-emerald-600"><i data-lucide="save" class="w-4 h-4"></i> <span class="hidden lg:inline">Sincronizado</span></span>`;
-            if (headerDesk) headerDesk.innerHTML = statusHTML; if (headerMob) headerMob.innerHTML = statusHTML; lucide.createIcons();
+            const headerDesk = document.getElementById('sync-status-desktop');
+            const headerMob = document.getElementById('sync-status-mobile');
+            let statusHTML = '';
+            if (AppState.errorMsg) statusHTML = `<span class="flex items-center gap-1 text-rose-500"><i data-lucide="alert-circle" class="w-4 h-4"></i> <span class="hidden lg:inline">${AppState.errorMsg}</span></span>`;
+            else if (AppState.saving) statusHTML = `<span class="flex items-center gap-1 text-slate-500"><i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> <span class="hidden lg:inline">Salvando...</span></span>`;
+            else statusHTML = `<span class="flex items-center gap-1 text-emerald-600"><i data-lucide="save" class="w-4 h-4"></i> <span class="hidden lg:inline">Sincronizado</span></span>`;
+            
+            if (headerDesk) headerDesk.innerHTML = statusHTML;
+            if (headerMob) headerMob.innerHTML = statusHTML;
+            lucide.createIcons();
+        }
+
+        function mergeServerData(serverData) {
+            // Anti-crash para dados antigos do V1 (se tiver array de incomes, bills, ignora e usa o vazio novo)
+            if (!serverData || typeof serverData !== 'object' || serverData.incomes || serverData.bills) {
+                return deepClone(AppState.budgetData);
+            }
+
+            let parsedData = serverData;
+            if (parsedData['Janeiro'] && !parsedData[currentYearString]) {
+                parsedData = { [currentYearString]: parsedData };
+            }
+            
+            let newData = deepClone(AppState.budgetData);
+            
+            Object.keys(parsedData).forEach(year => {
+                if (!newData[year]) newData[year] = generateEmptyYearData();
+                
+                Object.keys(parsedData[year]).forEach(m => {
+                    if (newData[year][m]) {
+                        if (parsedData[year][m].goals) {
+                            if (typeof parsedData[year][m].goals.fixed === 'number') {
+                                newData[year][m].goals = {
+                                    fixed: { label: 'Contas Fixas', value: parsedData[year][m].goals.fixed || 0, color: 'blue' },
+                                    variable: { label: 'Despesas Variáveis', value: parsedData[year][m].goals.variable || 0, color: 'pink' },
+                                    investment: { label: 'Investimentos', value: parsedData[year][m].goals.investment || 0, color: 'emerald' }
+                                };
+                            } else {
+                                newData[year][m].goals = parsedData[year][m].goals;
+                            }
+                        }
+
+                        Object.keys(newData[year][m]).forEach(k => { if (!['goals', 'itemMetadata', 'categoriesMetadata'].includes(k)) delete newData[year][m][k]; });
+                        if (!newData[year][m].itemMetadata) newData[year][m].itemMetadata = {};
+                        
+                        newData[year][m].categoriesMetadata = parsedData[year][m].categoriesMetadata || { ...DEFAULT_METADATA };
+                        Object.keys(newData[year][m].categoriesMetadata).forEach(cat => {
+                            if (['fixed', 'variable', 'tithe'].includes(newData[year][m].categoriesMetadata[cat])) newData[year][m].categoriesMetadata[cat] = 'expense';
+                        });
+
+                        Object.keys(parsedData[year][m]).forEach(cat => {
+                            if (!['goals', 'itemMetadata', 'categoriesMetadata'].includes(cat)) {
+                                newData[year][m][cat] = {};
+                                if (!newData[year][m].itemMetadata[cat]) newData[year][m].itemMetadata[cat] = {};
+                                
+                                Object.keys(parsedData[year][m][cat]).forEach(item => {
+                                    newData[year][m][cat][item] = parsedData[year][m][cat][item];
+                                    if (parsedData[year][m].itemMetadata?.[cat]?.[item]) {
+                                        newData[year][m].itemMetadata[cat][item] = parsedData[year][m].itemMetadata[cat][item];
+                                    } else {
+                                        const catConfig = CATEGORIES_CONFIG[cat];
+                                        if (catConfig?.type === 'investment') newData[year][m].itemMetadata[cat][item] = item.toLowerCase().includes('reserva') ? 'reserva' : item.toLowerCase().includes('fixa') ? 'fixa' : 'variavel';
+                                        else newData[year][m].itemMetadata[cat][item] = isDefaultFixed(item) ? 'fixed' : 'variable';
+                                    }
+                                    if (parsedData[year][m].itemMetadata?.[cat]?.[`${item}_inst`] !== undefined) newData[year][m].itemMetadata[cat][`${item}_inst`] = parsedData[year][m].itemMetadata[cat][`${item}_inst`];
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+            return newData;
         }
 
         async function saveToDatabase() {
-            AppState.saving = true; AppState.errorMsg = null; updateSyncUI();
+            AppState.saving = true;
+            AppState.errorMsg = null;
+            updateSyncUI();
+            
             try {
                 if (!AppState.user) return;
-                const { error } = await supabaseClient.from('dados_financeiros').upsert({ id: AppState.user.id, payload: AppState.budgetData, updated_at: new Date() });
+                
+                // CORREÇÃO: Removido o .ups4 que estava causando o erro
+                const { error } = await supabaseClient
+                    .from('dados_financeiros')
+                    .upsert({ 
+                        id: AppState.user.id, 
+                        payload: AppState.budgetData,
+                        updated_at: new Date()
+                    });
+
                 if (error) throw error;
-            } catch (error) { AppState.errorMsg = "Falha ao salvar."; } finally { AppState.saving = false; updateSyncUI(); }
+            } catch (error) {
+                console.error("Save error:", error);
+                AppState.errorMsg = "Falha ao salvar. Nuvem indisponível.";
+            } finally {
+                AppState.saving = false;
+                updateSyncUI();
+            }
         }
 
         async function loadDatabaseData() {
             try {
                 if (!AppState.user) return;
-                const { data, error } = await supabaseClient.from('dados_financeiros').select('payload').eq('id', AppState.user.id).single();
+                
+                const { data, error } = await supabaseClient
+                    .from('dados_financeiros')
+                    .select('payload')
+                    .eq('id', AppState.user.id)
+                    .single();
+
                 if (data && data.payload) {
-                    if (data.payload.incomes) AppState.budgetData = { [currentYearString]: generateEmptyYearData() };
-                    else AppState.budgetData = data.payload;
+                    AppState.budgetData = mergeServerData(data.payload);
                 }
-            } catch (error) { console.error(error); } finally { AppState.loading = false; renderApp(); }
+            } catch (error) {
+                console.error("DB Error Load:", error);
+            } finally {
+                AppState.loading = false;
+                renderApp();
+            }
         }
+
+        // --- AÇÕES DO USUÁRIO & DEBOUNCE ---
+        let typingTimer;
 
         window.AppActions = {
-            sair: async () => { await supabaseClient.auth.signOut(); localStorage.removeItem("logado"); window.location.href = "login.html"; },
+            sair: async () => {
+                await supabaseClient.auth.signOut();
+                localStorage.removeItem("logado");
+                window.location.href = "login.html";
+            },
+
             changeTab: (tabId) => { AppState.activeTab = tabId; renderApp(); },
-            changeYear: (delta) => { const newYearStr = (parseInt(AppState.currentYear) + delta).toString(); if (!AppState.budgetData[newYearStr]) AppState.budgetData[newYearStr] = generateEmptyYearData(); AppState.currentYear = newYearStr; renderApp(); },
+            
+            changeYear: (delta) => {
+                const newYearStr = (parseInt(AppState.currentYear) + delta).toString();
+                if (!AppState.budgetData[newYearStr]) {
+                    AppState.budgetData[newYearStr] = generateEmptyYearData();
+                    saveToDatabase();
+                }
+                AppState.currentYear = newYearStr;
+                renderApp();
+            },
+            
             prevMonth: () => { if (AppState.currentMonthIdx > 0) { AppState.currentMonthIdx--; renderApp(); } },
-            nextMonthConfirm: () => { if (AppState.currentMonthIdx < 11) { AppState.confirmMonthChange = AppState.currentMonthIdx + 1; renderModal(); } },
+            nextMonthConfirm: () => { 
+                if (AppState.currentMonthIdx < 11) {
+                    AppState.confirmMonthChange = AppState.currentMonthIdx + 1;
+                    renderModal();
+                }
+            },
             closeModal: () => { AppState.confirmMonthChange = null; renderModal(); },
             confirmMonthChange: () => { AppState.currentMonthIdx = AppState.confirmMonthChange; AppState.confirmMonthChange = null; renderApp(); },
+            
             handleInputDebounced: (year, month, category, item, inputEl) => {
-                const rawDigits = inputEl.value.replace(/\D/g, ''); inputEl.value = rawDigits ? formatCurrencyInput(Number(rawDigits) / 100) : '0,00';
-                clearTimeout(typingTimer); typingTimer = setTimeout(() => {
+                const rawDigits = inputEl.value.replace(/\D/g, '');
+                if (!rawDigits) { inputEl.value = '0,00'; } 
+                else { inputEl.value = formatCurrencyInput(Number(rawDigits) / 100); }
+                
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(() => {
                     const numValue = parseCurrencyString(inputEl.value);
-                    if (AppState.budgetData[year][month][category][item] !== numValue) { AppState.budgetData[year][month][category][item] = numValue; saveToDatabase(); renderApp(); }
+                    if (AppState.budgetData[year][month][category][item] !== numValue) {
+                        AppState.budgetData[year][month][category][item] = numValue;
+                        saveToDatabase();
+                        renderApp();
+                    }
                 }, 1000);
             },
-            handleBlur: (year, month, category, item, inputEl) => { clearTimeout(typingTimer); const numValue = parseCurrencyString(inputEl.value); inputEl.value = formatCurrencyInput(numValue); if (AppState.budgetData[year][month][category][item] !== numValue) { AppState.budgetData[year][month][category][item] = numValue; saveToDatabase(); renderApp(); } },
+
+            handleBlur: (year, month, category, item, inputEl) => {
+                clearTimeout(typingTimer);
+                const numValue = parseCurrencyString(inputEl.value);
+                inputEl.value = formatCurrencyInput(numValue);
+                if (AppState.budgetData[year][month][category][item] !== numValue) {
+                    AppState.budgetData[year][month][category][item] = numValue;
+                    saveToDatabase();
+                    renderApp();
+                }
+            },
+
             handleGoalInput: (id, val, renda) => {
-                const numVal = parseInt(val) || 0; const percentEl = document.getElementById(`goal-val-${id}`); if(percentEl) percentEl.innerText = numVal + '%';
-                const plannedVal = (numVal / 100) * renda; const planValEl = document.getElementById(`plan-val-${id}`); if(planValEl) planValEl.innerText = formatCurrency(plannedVal);
-                let total = 0; document.querySelectorAll('.goal-slider').forEach(s => total += parseInt(s.value) || 0);
-                const isExc = total > 100; const totalText = document.getElementById('plan-total-text'); if(totalText) { totalText.innerText = total + '%'; totalText.className = isExc ? 'text-rose-500 font-bold' : 'text-blue-600 font-bold'; }
-                const totalBar = document.getElementById('plan-total-bar'); if(totalBar) { totalBar.style.width = Math.min(100, total) + '%'; totalBar.className = `h-full transition-all ${isExc ? 'bg-rose-500' : 'bg-blue-500'}`; }
-                const excMsg = document.getElementById('plan-exc-msg'); if(excMsg) excMsg.style.display = isExc ? 'block' : 'none';
+                const numVal = parseInt(val) || 0;
+                const percentEl = document.getElementById(`goal-val-${id}`);
+                if(percentEl) percentEl.innerText = numVal + '%';
+                
+                const plannedVal = (numVal / 100) * Number(renda);
+                const planValEl = document.getElementById(`plan-val-${id}`);
+                if(planValEl) planValEl.innerText = formatCurrency(plannedVal);
+
+                let total = 0;
+                document.querySelectorAll('.goal-slider').forEach(s => total += parseInt(s.value) || 0);
+
+                const isExc = total > 100;
+                const totalText = document.getElementById('plan-total-text');
+                if(totalText) {
+                    totalText.innerText = total + '%';
+                    totalText.className = isExc ? 'text-rose-500 font-bold' : 'text-blue-600 font-bold';
+                }
+                
+                const totalBar = document.getElementById('plan-total-bar');
+                if(totalBar) {
+                    totalBar.style.width = Math.min(100, total) + '%';
+                    totalBar.className = `h-full transition-all ${isExc ? 'bg-rose-500' : 'bg-blue-500'}`;
+                }
+                
+                const excMsg = document.getElementById('plan-exc-msg');
+                if(excMsg) excMsg.style.display = isExc ? 'block' : 'none';
             },
-            handleGoalChange: (year, month, id, val) => { AppState.budgetData[year][month].goals[id].value = parseInt(val) || 0; saveToDatabase(); renderApp(); },
-            addGoal: (year, month) => { const newId = 'custom_' + Date.now(); AppState.budgetData[year][month].goals[newId] = { label: 'Novo Objetivo', value: 0, color: DYNAMIC_COLORS[Object.keys(AppState.budgetData[year][month].goals).length % DYNAMIC_COLORS.length] }; saveToDatabase(); renderApp(); },
+
+            handleGoalChange: (year, month, id, val) => {
+                const numValue = parseInt(val) || 0;
+                if (!AppState.budgetData[year][month].goals) return;
+                AppState.budgetData[year][month].goals[id].value = numValue;
+                saveToDatabase();
+                renderApp();
+            },
+
+            addGoal: (year, month) => {
+                const newId = 'custom_' + Date.now();
+                const colorAssigned = DYNAMIC_COLORS[Object.keys(AppState.budgetData[year][month].goals).length % DYNAMIC_COLORS.length];
+                AppState.budgetData[year][month].goals[newId] = { label: 'Novo Objetivo', value: 0, color: colorAssigned };
+                saveToDatabase(); renderApp();
+            },
             removeGoal: (year, month, id) => { delete AppState.budgetData[year][month].goals[id]; saveToDatabase(); renderApp(); },
-            renameGoal: (year, month, id, inputEl) => { AppState.budgetData[year][month].goals[id].label = inputEl.value.trim() || 'Objetivo'; saveToDatabase(); renderApp(); },
-            handleTypeChange: (year, month, category, item, newType) => { if (!AppState.budgetData[year][month].itemMetadata[category]) AppState.budgetData[year][month].itemMetadata[category] = {}; AppState.budgetData[year][month].itemMetadata[category][item] = newType; saveToDatabase(); renderApp(); },
-            handleInstChange: (year, month, category, item, instName) => { if (!AppState.budgetData[year][month].itemMetadata[category]) AppState.budgetData[year][month].itemMetadata[category] = {}; AppState.budgetData[year][month].itemMetadata[category][`${item}_inst`] = instName.trim(); saveToDatabase(); },
+            renameGoal: (year, month, id, inputEl) => {
+                const newLabel = inputEl.value.trim() || 'Objetivo';
+                AppState.budgetData[year][month].goals[id].label = newLabel;
+                saveToDatabase(); renderApp();
+            },
+            
+            handleTypeChange: (year, month, category, item, newType) => {
+                if (!AppState.budgetData[year][month].itemMetadata[category]) AppState.budgetData[year][month].itemMetadata[category] = {};
+                AppState.budgetData[year][month].itemMetadata[category][item] = newType;
+                saveToDatabase(); renderApp();
+            },
+            handleInstChange: (year, month, category, item, instName) => {
+                if (!AppState.budgetData[year][month].itemMetadata[category]) AppState.budgetData[year][month].itemMetadata[category] = {};
+                AppState.budgetData[year][month].itemMetadata[category][`${item}_inst`] = instName.trim();
+                saveToDatabase();
+            },
+
             copyFromPreviousMonth: () => {
-                let pm = AppState.currentMonthIdx - 1; let py = AppState.currentYear; if (pm < 0) { pm = 11; py = (parseInt(py) - 1).toString(); }
-                if (!AppState.budgetData[py] || !AppState.budgetData[py][MONTHS[pm]]) return;
-                AppState.budgetData[AppState.currentYear][AppState.currentMonth] = deepClone(AppState.budgetData[py][MONTHS[pm]]); saveToDatabase(); renderApp();
-            },
-            addCategory: (year, month) => { let name = 'Nova Categoria', c = 1; while (AppState.budgetData[year][month][name] !== undefined) { name = `Nova Categoria ${c}`; c++; } AppState.budgetData[year][month][name] = {}; AppState.budgetData[year][month].categoriesMetadata[name] = 'expense'; saveToDatabase(); renderApp(); },
-            renameCategory: (year, month, old, el) => { const nw = el.value.trim(); if (old === nw || nw === '' || AppState.budgetData[year][month][nw] !== undefined) { el.value = old; return; } AppState.budgetData[year][month][nw] = AppState.budgetData[year][month][old]; delete AppState.budgetData[year][month][old]; if (AppState.budgetData[year][month].itemMetadata[old]) { AppState.budgetData[year][month].itemMetadata[nw] = AppState.budgetData[year][month].itemMetadata[old]; delete AppState.budgetData[year][month].itemMetadata[old]; } if (AppState.budgetData[year][month].categoriesMetadata[old]) { AppState.budgetData[year][month].categoriesMetadata[nw] = AppState.budgetData[year][month].categoriesMetadata[old]; delete AppState.budgetData[year][month].categoriesMetadata[old]; } saveToDatabase(); renderApp(); },
-            deleteCategory: (year, month, name) => { delete AppState.budgetData[year][month][name]; delete AppState.budgetData[year][month].itemMetadata[name]; delete AppState.budgetData[year][month].categoriesMetadata[name]; saveToDatabase(); renderApp(); },
-            addItem: (year, month, cat, def = 'Nova Conta', type = 'auto') => {
-                if (!AppState.budgetData[year][month][cat]) { AppState.budgetData[year][month][cat] = {}; AppState.budgetData[year][month].categoriesMetadata[cat] = cat === 'Investimento' ? 'investment' : cat === 'Renda Familiar' ? 'income' : 'expense'; }
-                let name = def, c = 1; while (AppState.budgetData[year][month][cat][name] !== undefined) { name = `${def} ${c}`; c++; }
-                AppState.budgetData[year][month][cat][name] = 0; if (!AppState.budgetData[year][month].itemMetadata[cat]) AppState.budgetData[year][month].itemMetadata[cat] = {};
-                AppState.budgetData[year][month].itemMetadata[cat][name] = type === 'auto' ? (AppState.budgetData[year][month].categoriesMetadata[cat] === 'investment' ? 'variavel' : (isDefaultFixed(name) ? 'fixed' : 'variable')) : type;
+                let prevMonthIdx = AppState.currentMonthIdx - 1;
+                let prevYear = AppState.currentYear;
+                if (prevMonthIdx < 0) { prevMonthIdx = 11; prevYear = (parseInt(AppState.currentYear) - 1).toString(); }
+                if (!AppState.budgetData[prevYear] || !AppState.budgetData[prevYear][MONTHS[prevMonthIdx]]) return;
+                
+                const prevData = AppState.budgetData[prevYear][MONTHS[prevMonthIdx]];
+                AppState.budgetData[AppState.currentYear][AppState.currentMonth] = deepClone(prevData);
                 saveToDatabase(); renderApp();
             },
-            renameItem: (year, month, cat, old, el) => {
-                const nw = el.value.trim(); if (old === nw || nw === '') { el.value = old; return; }
-                let fn = nw, c = 1; while (AppState.budgetData[year][month][cat][fn] !== undefined && fn !== old) { fn = `${nw} ${c}`; c++; }
-                AppState.budgetData[year][month][cat][fn] = AppState.budgetData[year][month][cat][old]; delete AppState.budgetData[year][month][cat][old];
-                if (AppState.budgetData[year][month].itemMetadata[cat]) { AppState.budgetData[year][month].itemMetadata[fn] = AppState.budgetData[year][month].itemMetadata[old]; delete AppState.budgetData[year][month].itemMetadata[old]; }
+
+            addCategory: (year, month) => {
+                let name = 'Nova Categoria', counter = 1;
+                while (AppState.budgetData[year][month][name] !== undefined) { name = `Nova Categoria ${counter}`; counter++; }
+                AppState.budgetData[year][month][name] = {};
+                if (!AppState.budgetData[year][month].itemMetadata[name]) AppState.budgetData[year][month].itemMetadata[name] = {};
+                AppState.budgetData[year][month].categoriesMetadata[name] = 'expense';
                 saveToDatabase(); renderApp();
             },
-            deleteItem: (year, month, cat, name) => { delete AppState.budgetData[year][month][cat][name]; if (AppState.budgetData[year][month].itemMetadata[cat]) { delete AppState.budgetData[year][month].itemMetadata[cat][name]; } saveToDatabase(); renderApp(); }
+            renameCategory: (year, month, oldName, inputEl) => {
+                const newName = inputEl.value.trim();
+                if (oldName === newName || newName === '' || AppState.budgetData[year][month][newName] !== undefined) { inputEl.value = oldName; return; }
+                
+                AppState.budgetData[year][month][newName] = AppState.budgetData[year][month][oldName];
+                delete AppState.budgetData[year][month][oldName];
+                
+                if (AppState.budgetData[year][month].itemMetadata[oldName]) {
+                    AppState.budgetData[year][month].itemMetadata[newName] = AppState.budgetData[year][month].itemMetadata[oldName];
+                    delete AppState.budgetData[year][month].itemMetadata[oldName];
+                }
+                if (AppState.budgetData[year][month].categoriesMetadata[oldName]) {
+                    AppState.budgetData[year][month].categoriesMetadata[newName] = AppState.budgetData[year][month].categoriesMetadata[oldName];
+                    delete AppState.budgetData[year][month].categoriesMetadata[oldName];
+                }
+                saveToDatabase(); renderApp();
+            },
+            deleteCategory: (year, month, catName) => {
+                delete AppState.budgetData[year][month][catName];
+                delete AppState.budgetData[year][month].itemMetadata[catName];
+                delete AppState.budgetData[year][month].categoriesMetadata[catName];
+                saveToDatabase(); renderApp();
+            },
+
+            addItem: (year, month, categoryName, defaultName = 'Nova Conta', defaultType = 'auto') => {
+                if (!AppState.budgetData[year][month][categoryName]) {
+                    AppState.budgetData[year][month][categoryName] = {};
+                    AppState.budgetData[year][month].categoriesMetadata[categoryName] = categoryName === 'Investimento' ? 'investment' : categoryName === 'Renda Familiar' ? 'income' : 'expense';
+                }
+                let name = defaultName, counter = 1;
+                while (AppState.budgetData[year][month][categoryName][name] !== undefined) { name = `${defaultName} ${counter}`; counter++; }
+                
+                AppState.budgetData[year][month][categoryName][name] = 0;
+                if (!AppState.budgetData[year][month].itemMetadata[categoryName]) AppState.budgetData[year][month].itemMetadata[categoryName] = {};
+                
+                const catMetaType = AppState.budgetData[year][month].categoriesMetadata[categoryName] || CATEGORIES_CONFIG[categoryName]?.type || 'expense';
+                if(defaultType === 'auto') {
+                    AppState.budgetData[year][month].itemMetadata[categoryName][name] = catMetaType === 'investment' ? 'variavel' : (isDefaultFixed(name) ? 'fixed' : 'variable');
+                } else {
+                    AppState.budgetData[year][month].itemMetadata[categoryName][name] = defaultType;
+                }
+                saveToDatabase(); renderApp();
+            },
+            renameItem: (year, month, categoryName, oldName, inputEl) => {
+                const newName = inputEl.value.trim();
+                if (oldName === newName || newName === '') { inputEl.value = oldName; return; }
+                
+                let finalName = newName, counter = 1;
+                const items = AppState.budgetData[year][month][categoryName];
+                while (items[finalName] !== undefined && finalName !== oldName) { finalName = `${newName} ${counter}`; counter++; }
+
+                items[finalName] = items[oldName]; delete items[oldName];
+                if (AppState.budgetData[year][month].itemMetadata[categoryName]) {
+                    AppState.budgetData[year][month].itemMetadata[categoryName][finalName] = AppState.budgetData[year][month].itemMetadata[categoryName][oldName];
+                    delete AppState.budgetData[year][month].itemMetadata[categoryName][oldName];
+                    
+                    if (AppState.budgetData[year][month].itemMetadata[categoryName][`${oldName}_inst`] !== undefined) {
+                        AppState.budgetData[year][month].itemMetadata[categoryName][`${finalName}_inst`] = AppState.budgetData[year][month].itemMetadata[categoryName][`${oldName}_inst`];
+                        delete AppState.budgetData[year][month].itemMetadata[categoryName][`${oldName}_inst`];
+                    }
+                }
+                saveToDatabase(); renderApp();
+            },
+            deleteItem: (year, month, categoryName, itemName) => {
+                delete AppState.budgetData[year][month][categoryName][itemName];
+                if (AppState.budgetData[year][month].itemMetadata[categoryName]) {
+                    delete AppState.budgetData[year][month].itemMetadata[categoryName][itemName];
+                    delete AppState.budgetData[year][month].itemMetadata[categoryName][`${itemName}_inst`];
+                }
+                saveToDatabase(); renderApp();
+            }
         };
 
-        // --- RENDERIZADORES ---
+        // --- RENDERIZAÇÃO DE GRÁFICOS ---
         function destroyCharts() { Object.values(AppState.charts).forEach(chart => chart.destroy()); AppState.charts = {}; }
         function createPieChart(canvasId, data, colors, chartType = 'pie') {
-            const ctx = document.getElementById(canvasId); if (!ctx) return;
-            AppState.charts[canvasId] = new Chart(ctx, { type: chartType, plugins: [window.ChartDataLabels], data: { labels: data.map(d => d.name), datasets: [{ data: data.map(d => d.value), backgroundColor: colors, borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: chartType === 'doughnut' ? '65%' : undefined, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => { const val = ctx.raw; const total = ctx.dataset.data.reduce((a, b) => a + b, 0); const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0; return ` R$ ${formatCurrency(val).replace('R$', '').trim()} (${pct}%)`; } } }, datalabels: { color: '#ffffff', font: { weight: 'bold', size: 10 }, textShadowBlur: 4, textShadowColor: 'rgba(0,0,0,0.6)', formatter: (value, context) => { const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0); const pct = total > 0 ? ((value / total) * 100) : 0; if (pct < 5) return null; return pct.toFixed(0) + '%'; } } } } });
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) return;
+            AppState.charts[canvasId] = new Chart(ctx, {
+                type: chartType, 
+                plugins: [window.ChartDataLabels],
+                data: { labels: data.map(d => d.name), datasets: [{ data: data.map(d => d.value), backgroundColor: colors, borderWidth: 0, hoverOffset: 4 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: chartType === 'doughnut' ? '65%' : undefined,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (ctx) => { const val = ctx.raw; const total = ctx.dataset.data.reduce((a, b) => a + b, 0); const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0; return ` R$ ${formatCurrency(val).replace('R$', '').trim()} (${pct}%)`; } } },
+                        datalabels: { color: '#ffffff', font: { weight: 'bold', size: 10 }, textShadowBlur: 4, textShadowColor: 'rgba(0,0,0,0.6)', formatter: (value, context) => { const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0); const pct = total > 0 ? ((value / total) * 100) : 0; if (pct < 5) return null; return pct.toFixed(0) + '%'; } }
+                    }
+                }
+            });
         }
         function createBarChart(canvasId, data) {
-            const ctx = document.getElementById(canvasId); if (!ctx) return;
-            AppState.charts[canvasId] = new Chart(ctx, { type: 'bar', data: { labels: data.map(d => d.name), datasets: [{ label: 'Rendimentos', data: data.map(d => d.Rendimentos), backgroundColor: '#10b981', borderRadius: 4 }, { label: 'Gastos', data: data.map(d => d.Gastos), backgroundColor: '#f43f5e', borderRadius: 4 }, { label: 'Investido', data: data.map(d => d.Investido), backgroundColor: '#3b82f6', borderRadius: 4 }, { label: 'Saldo', data: data.map(d => d.Saldo), backgroundColor: '#8b5cf6', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false } }, y: { grid: { color: '#e2e8f0' }, ticks: { font: { size: 10 } } } }, plugins: { datalabels: { display: false }, legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, font: {size: 10} } } } } });
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) return;
+            AppState.charts[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.name),
+                    datasets: [
+                        { label: 'Rendimentos', data: data.map(d => d.Rendimentos), backgroundColor: '#10b981', borderRadius: {topLeft: 4, topRight: 4} },
+                        { label: 'Gastos', data: data.map(d => d.Gastos), backgroundColor: '#f43f5e', borderRadius: {topLeft: 4, topRight: 4} },
+                        { label: 'Investido', data: data.map(d => d.Investido), backgroundColor: '#3b82f6', borderRadius: {topLeft: 4, topRight: 4} },
+                        { label: 'Saldo', data: data.map(d => d.Saldo), backgroundColor: '#8b5cf6', borderRadius: {topLeft: 4, topRight: 4} }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { x: { grid: { display: false } }, y: { grid: { color: '#e2e8f0', drawBorder: false }, ticks: { callback: (val) => `R$ ${val}`, font: { size: 10 } } } },
+                    plugins: { datalabels: { display: false }, legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, font: {size: 10} } }, tooltip: { callbacks: { label: (ctx) => ` R$ ${formatCurrency(ctx.raw).replace('R$', '').trim()}` } } }
+                }
+            });
         }
-        function renderPieChartCard(id, title, data, colors) {
+        function renderPieChartCard(id, title, data, colors, type = 'pie') {
             const isEmpty = data.length === 0;
-            return `<div class="bg-white p-6 rounded-3xl shadow-sm border flex flex-col h-full"><h3 class="font-extrabold text-blue-700 uppercase text-xs tracking-widest text-center mb-4">${title}</h3>${!isEmpty ? `<div class="w-full flex justify-center pb-6 border-b"><div class="relative h-48 w-48"><canvas id="${id}"></canvas></div></div><div class="mt-4 space-y-2">${data.map((entry, i) => `<div class="flex justify-between text-xs items-center"><span>${entry.name}</span><strong>${formatCurrency(entry.value)}</strong></div>`).join('')}</div>` : `<div class="flex-1 flex items-center justify-center text-slate-400 italic text-sm min-h-[160px]">Nenhum dado</div>`}</div>`;
+            return `<div class="bg-white p-4 md:p-6 rounded-3xl shadow-sm border border-slate-200 flex flex-col h-full"><h3 class="font-extrabold text-blue-700 uppercase text-xs tracking-widest text-center mb-4">${title}</h3>${!isEmpty ? `<div class="w-full flex justify-center pb-6 border-b border-slate-50"><div class="relative w-48 h-48 sm:w-64 sm:h-64"><canvas id="${id}"></canvas></div></div><div class="w-full mt-4 space-y-2">${data.map((entry, i) => { const pct = ((entry.value / data.reduce((a,b)=>a+b.value,0)) * 100).toFixed(1); return `<div class="flex justify-between text-xs items-center p-1.5 hover:bg-slate-50 rounded-lg"><div class="flex items-center gap-2 overflow-hidden mr-2"><div class="w-3 h-3 rounded-full shrink-0" style="background-color: ${colors[i % colors.length]}"></div><span class="text-slate-600 font-bold truncate">${entry.name}</span></div><div class="text-right"><span class="font-bold text-slate-800 block leading-none">${formatCurrency(entry.value)}</span><span class="text-[10px] text-slate-400 font-medium">${pct}%</span></div></div>`}).join('')}</div>` : `<div class="flex-1 flex flex-col items-center justify-center text-slate-400 text-xs sm:text-sm italic min-h-[160px]">Nenhum dado registrado.</div>`}</div>`;
         }
 
+        // --- RENDERS DE ABAS ---
         function renderDashboard() {
-            const { totals, historyData } = calculateMetrics();
-            const yearlyBarData = MONTHS.map(m => { let r = 0, g = 0, i = 0; if(AppState.budgetData[AppState.currentYear] && AppState.budgetData[AppState.currentYear][m]) { Object.keys(AppState.budgetData[AppState.currentYear][m]).forEach(cat => { if (['goals', 'itemMetadata', 'categoriesMetadata'].includes(cat)) return; const type = AppState.budgetData[AppState.currentYear][m].categoriesMetadata?.[cat]; if (type === 'income') r += getCategoryTotal(AppState.currentYear, m, cat); else if (type === 'investment') i += getCategoryTotal(AppState.currentYear, m, cat); else g += getCategoryTotal(AppState.currentYear, m, cat); }); } return { name: m.substring(0, 3), Rendimentos: r, Gastos: g, Investido: i, Saldo: r - (g + i) }; });
-            setTimeout(() => { createBarChart('dashboard-bar-chart', yearlyBarData); }, 0);
-            return `<div class="space-y-6"><div class="grid grid-cols-2 md:grid-cols-5 gap-4">${[ { l: 'Rendimentos', v: totals.renda, c: 'text-emerald-600' }, { l: 'Gastos', v: totals.gastos, c: 'text-rose-600' }, { l: 'Investido', v: totals.investimentos + totals.reservaAtual, c: 'text-blue-600' }, { l: 'Saldo Mês', v: totals.saldo, c: totals.saldo >= 0 ? 'text-emerald-700' : 'text-rose-700' }, { l: 'Acumulado', v: totals.acumulado, c: totals.acumulado >= 0 ? 'text-blue-700' : 'text-rose-700' } ].map(card => `<div class="bg-white p-4 rounded-2xl border shadow-sm"><p class="text-[10px] font-bold text-slate-500 uppercase">${card.l}</p><p class="text-lg font-bold truncate ${card.c}">${formatCurrency(card.v)}</p></div>`).join('')}</div><div class="bg-white p-6 rounded-2xl border shadow-sm"><h3 class="font-bold text-center mb-6">Evolução ${AppState.currentYear}</h3><div class="h-64"><canvas id="dashboard-bar-chart"></canvas></div></div></div>`;
+            const { totals, metrics, historyData } = calculateMetrics();
+            const yearlyBarData = MONTHS.map(m => { let r = 0, g = 0, i = 0; if(AppState.budgetData[AppState.currentYear] && AppState.budgetData[AppState.currentYear][m]) { Object.keys(AppState.budgetData[AppState.currentYear][m]).forEach(cat => { if (['goals', 'itemMetadata', 'categoriesMetadata'].includes(cat)) return; const type = AppState.budgetData[AppState.currentYear][m].categoriesMetadata?.[cat] || CATEGORIES_CONFIG[cat]?.type || 'expense'; const catTot = getCategoryTotal(AppState.currentYear, m, cat); if (type === 'income') r += catTot; else if (type === 'investment') i += catTot; else g += catTot; }); } return { name: m.substring(0, 3), Rendimentos: r, Gastos: g, Investido: i, Saldo: r - (g + i) }; });
+            // CORREÇÃO DE SINTAXE: Removido o espaço de 'saldoConta Corrente'
+            const saldoContaCorrente = totals.renda - (totals.gastos + totals.investimentos + totals.reservaAtual);
+            const catGastos = Object.keys(AppState.currentData).filter(cat => !['goals', 'itemMetadata', 'categoriesMetadata'].includes(cat) && (AppState.currentData.categoriesMetadata?.[cat] || CATEGORIES_CONFIG[cat]?.type || 'expense') === 'expense').map(cat => ({ name: cat, value: getCategoryTotal(AppState.currentYear, AppState.currentMonth, cat) })).filter(d => d.value > 0).sort((a, b) => b.value - a.value);
+            const fixoVar = [{ name: 'Contas Fixas', value: totals.fixos }, { name: 'Despesas Variáveis', value: totals.variaveis }].filter(d => d.value > 0);
+            const incomeData = [], ccData = [], investData = [];
+            const meta = AppState.currentData.categoriesMetadata || DEFAULT_METADATA;
+            
+            Object.keys(AppState.currentData).forEach(cat => {
+                if (['goals', 'itemMetadata', 'categoriesMetadata'].includes(cat)) return;
+                const items = Object.entries(AppState.currentData[cat]).map(([n, v]) => ({name: n, value: Number(v)}));
+                if (meta[cat] === 'income' || cat === 'Renda Familiar') incomeData.push(...items);
+                if (cat.toLowerCase().includes('cartão') || cat.toLowerCase().includes('cartao')) ccData.push(...items);
+                if (meta[cat] === 'investment' || cat === 'Investimento') investData.push(...items);
+            });
+            const processChartArr = arr => arr.filter(d => d.value > 0).sort((a,b) => b.value - a.value);
+
+            setTimeout(() => { createBarChart('dashboard-bar-chart', yearlyBarData); if(catGastos.length > 0) createPieChart('chart-cat', catGastos, COLORS_GERAL, 'pie'); if(fixoVar.length > 0) createPieChart('chart-fixovar', fixoVar, ['#f43f5e', '#f59e0b'], 'pie'); if(processChartArr(incomeData).length > 0) createPieChart('chart-income', processChartArr(incomeData), COLORS_INCOME, 'pie'); if(processChartArr(ccData).length > 0) createPieChart('chart-cc', processChartArr(ccData), COLORS_CC, 'pie'); if(processChartArr(investData).length > 0) createPieChart('chart-invest', processChartArr(investData), COLORS_INVEST, 'pie'); }, 0);
+
+            return `<div class="space-y-6"><div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">${[ { l: 'Rendimentos', v: totals.renda, c: 'text-emerald-600' }, { l: 'Gastos', v: totals.gastos, c: 'text-rose-600' }, { l: 'Investido', v: totals.investimentos + totals.reservaAtual, c: 'text-blue-600', bg: 'bg-blue-50' }, { l: 'Saldo Mês', v: totals.saldo, c: totals.saldo >= 0 ? 'text-emerald-700' : 'text-rose-700', bg: totals.saldo >= 0 ? 'bg-emerald-50' : 'bg-rose-50' }, { l: 'Acumulado Ano', v: totals.acumulado, c: totals.acumulado >= 0 ? 'text-blue-700' : 'text-rose-700', bg: totals.acumulado >= 0 ? 'bg-blue-50' : 'bg-rose-50' } ].map(card => `<div class="p-3 md:p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-center ${card.bg || 'bg-white'}"><p class="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">${card.l}</p><p class="text-base sm:text-lg md:text-xl font-bold truncate mt-1 ${card.c}">${formatCurrency(card.v)}</p></div>`).join('')}</div><div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-200"><h3 class="font-bold text-slate-800 uppercase text-xs md:text-sm tracking-wide mb-6 text-center">Evolução em ${AppState.currentYear}</h3><div class="h-[300px] md:h-[350px] w-full relative"><canvas id="dashboard-bar-chart"></canvas></div></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">${renderPieChartCard('chart-cat', 'Para onde vai meu dinheiro? (Categorias)', catGastos, COLORS_GERAL, 'pie')}${renderPieChartCard('chart-fixovar', 'Gastos: Fixos vs Variáveis', fixoVar, ['#f43f5e', '#f59e0b'], 'pie')}${renderPieChartCard('chart-income', 'Rendimentos', processChartArr(incomeData), COLORS_INCOME, 'pie')}</div><div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">${renderPieChartCard('chart-cc', 'Gastos com Cartão de Crédito', processChartArr(ccData), COLORS_CC, 'pie')}${renderPieChartCard('chart-invest', 'Valor Investido', processChartArr(investData), COLORS_INVEST, 'pie')}</div></div>`;
         }
 
-        function renderEditableRowHTML(name, value, type, isInc, isInv, cat) {
-            const clr = isInc ? 'text-emerald-600 focus:bg-emerald-50' : 'text-rose-600 focus:bg-rose-50';
+        function renderEditableRowHTML(name, value, type, isIncome, isInvestment, category) {
+            const colorClass = isIncome ? 'text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50' : 'text-rose-600 focus:text-rose-700 focus:bg-rose-50';
             const y = AppState.currentYear; const m = AppState.currentMonth;
-            let sel = isInv ? `<select onchange="AppActions.handleTypeChange('${y}','${m}','${cat}','${name}',this.value)" class="text-[9px] uppercase font-bold rounded px-1.5 py-1 ${type==='reserva'?'bg-blue-100 text-blue-700':type==='fixa'?'bg-emerald-100 text-emerald-700':'bg-purple-100 text-purple-700'}"><option value="reserva" ${type==='reserva'?'selected':''}>Reserva</option><option value="fixa" ${type==='fixa'?'selected':''}>Fixa</option><option value="variavel" ${type==='variavel'?'selected':''}>Var</option></select>` : !isInc ? `<select onchange="AppActions.handleTypeChange('${y}','${m}','${cat}','${name}',this.value)" class="text-[9px] uppercase font-bold rounded px-1.5 py-1 ${type==='fixed'?'bg-rose-100 text-rose-700':'bg-orange-100 text-orange-700'}"><option value="fixed" ${type==='fixed'?'selected':''}>Fixo</option><option value="variable" ${type==='variable'?'selected':''}>Var</option></select>` : '';
-            return `<div class="flex items-center justify-between p-2 bg-white hover:bg-slate-50 border border-slate-100 rounded-xl transition-colors group shadow-sm gap-1"><input type="text" value="${name}" onblur="AppActions.renameItem('${y}','${m}','${cat}','${name}',this)" class="bg-transparent font-semibold text-slate-700 text-xs outline-none flex-1 min-w-[80px]"><div class="flex items-center gap-1 shrink-0">${sel}<input type="text" inputmode="numeric" value="${formatCurrencyInput(value)}" oninput="AppActions.handleInputDebounced('${y}','${m}','${cat}','${name}',this)" onblur="AppActions.handleBlur('${y}','${m}','${cat}','${name}',this)" class="w-20 border-transparent bg-transparent font-bold text-xs text-right outline-none rounded ${clr}"><button onclick="AppActions.deleteItem('${y}','${m}','${cat}','${name}')" class="text-rose-400 hover:text-rose-600 group-hover:opacity-100 opacity-0 transition-opacity"><i data-lucide="x" class="w-4 h-4"></i></button></div></div>`;
+            const inputId = `input-val-${safeId(category)}-${safeId(name)}`; const nameInputId = `input-name-${safeId(category)}-${safeId(name)}`;
+
+            let selectHTML = '';
+            if (isInvestment) {
+                const colors = type === 'reserva' ? 'bg-blue-100 text-blue-700' : type === 'fixa' ? 'bg-emerald-100 text-emerald-700' : 'bg-purple-100 text-purple-700';
+                selectHTML = `<select onchange="AppActions.handleTypeChange('${y}', '${m}', '${category}', '${name}', this.value)" class="text-[9px] uppercase font-bold rounded px-1.5 py-1 outline-none cursor-pointer transition-colors ${colors}"><option value="reserva" ${type==='reserva'?'selected':''}>Reserva</option><option value="fixa" ${type==='fixa'?'selected':''}>Fixa</option><option value="variavel" ${type==='variavel'?'selected':''}>Var</option></select>`;
+            } else if (!isIncome) {
+                const colors = type === 'fixed' ? 'bg-rose-100 text-rose-700' : 'bg-orange-100 text-orange-700';
+                selectHTML = `<select onchange="AppActions.handleTypeChange('${y}', '${m}', '${category}', '${name}', this.value)" class="text-[9px] uppercase font-bold rounded px-1.5 py-1 outline-none cursor-pointer transition-colors ${colors}"><option value="fixed" ${type==='fixed'?'selected':''}>Fixo</option><option value="variable" ${type==='variable'?'selected':''}>Var</option></select>`;
+            }
+
+            return `<div class="flex items-center justify-between p-2 bg-white hover:bg-slate-50/80 border border-slate-100 rounded-xl transition-colors group shadow-sm gap-1 flex-wrap sm:flex-nowrap"><input id="${nameInputId}" type="text" value="${name}" onblur="AppActions.renameItem('${y}', '${m}', '${category}', '${name}', this)" class="bg-transparent font-semibold text-slate-700 text-xs outline-none w-full sm:w-auto flex-1 min-w-[100px] mb-1 sm:mb-0" placeholder="Descrição"><div class="flex items-center gap-1 shrink-0 ml-auto">${selectHTML}<input id="${inputId}" type="text" inputmode="numeric" value="${formatCurrencyInput(value)}" oninput="AppActions.handleInputDebounced('${y}', '${m}', '${category}', '${name}', this)" onblur="AppActions.handleBlur('${y}', '${m}', '${category}', '${name}', this)" onkeydown="if(event.key==='Enter')this.blur()" class="w-16 sm:w-20 !pl-1 !pr-1 !py-1 border-transparent bg-transparent hover:bg-white font-bold text-xs text-right outline-none transition-all rounded ${colorClass}"><button onclick="AppActions.deleteItem('${y}', '${m}', '${category}', '${name}')" class="text-rose-400 hover:text-rose-600 p-1 sm:p-0.5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"><i data-lucide="x" class="w-3 h-3 sm:w-4 sm:h-4"></i></button></div></div>`;
         }
 
         function renderRenda() {
-            const entries = Object.entries(AppState.currentData['Renda Familiar'] || {});
-            return `<div class="max-w-2xl mx-auto bg-white p-8 rounded-3xl border shadow-sm"><div class="flex justify-between mb-6"><h3>Minhas Rendas</h3><button onclick="AppActions.addItem('${AppState.currentYear}','${AppState.currentMonth}','Renda Familiar','Nova Renda','income')" class="bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold">Adicionar</button></div><div class="space-y-3">${entries.map(([n,v]) => renderEditableRowHTML(n,v,'income',true,false,'Renda Familiar')).join('')}</div></div>`;
+            const { totals } = calculateMetrics(); const y = AppState.currentYear; const m = AppState.currentMonth;
+            const incomes = AppState.currentData['Renda Familiar'] || {}; const entries = Object.entries(incomes);
+            const totalRenda = getCategoryTotal(AppState.currentYear, AppState.currentMonth, 'Renda Familiar');
+            const isMonthEmpty = totals.renda === 0 && totals.gastos === 0 && (totals.investimentos + totals.reservaAtual) === 0;
+
+            let html = '<div class="max-w-2xl mx-auto">';
+            if (isMonthEmpty && (AppState.currentMonthIdx > 0 || parseInt(AppState.currentYear) > 2020)) {
+                let pMonth = AppState.currentMonthIdx - 1; let pYear = AppState.currentYear;
+                if (pMonth < 0) { pMonth = 11; pYear = (parseInt(AppState.currentYear) - 1).toString(); }
+                html += `<div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"><div class="flex items-center gap-3"><div class="p-2 bg-blue-100 rounded-lg shrink-0"><i data-lucide="copy" class="w-5 h-5 text-blue-600"></i></div><div><h4 class="font-bold text-blue-800 text-sm">Puxar dados passados?</h4><p class="text-xs text-blue-600">Copie as contas de ${MONTHS[pMonth]}/${pYear} para agilizar.</p></div></div><button onclick="AppActions.copyFromPreviousMonth()" class="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition-colors">Copiar Dados</button></div>`;
+            }
+            html += `<div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 md:p-8"><div class="flex flex-wrap gap-2 justify-between items-center mb-6"><h3 class="font-bold text-slate-800 uppercase text-xs md:text-sm tracking-widest">Minhas Rendas</h3><button onclick="AppActions.addItem('${y}', '${m}', 'Renda Familiar', 'Nova Renda', 'income')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 md:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm transition-colors"><i data-lucide="plus" class="w-3 h-3"></i> Adicionar</button></div><div class="space-y-3 min-h-[120px]">${entries.length === 0 ? '<div class="flex items-center justify-center h-full text-slate-400 italic text-xs md:text-sm py-10">Nenhuma renda cadastrada.</div>' : entries.map(([name, val]) => renderEditableRowHTML(name, val, 'income', true, false, 'Renda Familiar')).join('')}</div><div class="mt-8 pt-6 border-t border-slate-100 flex flex-wrap gap-2 justify-between items-end"><span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest">Total Recebido:</span><span class="text-2xl md:text-3xl font-bold text-emerald-600">${formatCurrency(totalRenda)}</span></div></div></div>`;
+            return html;
         }
 
         function renderGastos() {
-            const expenseCats = Object.keys(AppState.currentData).filter(cat => !['goals','itemMetadata','categoriesMetadata'].includes(cat) && AppState.currentData.categoriesMetadata?.[cat] === 'expense');
-            let html = `<div class="grid grid-cols-1 md:grid-cols-4 gap-4">`;
-            expenseCats.forEach(cat => {
-                html += `<div class="bg-white p-4 rounded-3xl border shadow-sm"><strong>${cat}</strong><div class="mt-4 space-y-2">${Object.entries(AppState.currentData[cat]).map(([n,v])=>renderEditableRowHTML(n,v,AppState.currentData.itemMetadata?.[cat]?.[n],false,false,cat)).join('')}</div><button onclick="AppActions.addItem('${AppState.currentYear}','${AppState.currentMonth}','${cat}')" class="mt-4 w-full text-blue-600 font-bold text-xs">+ Conta</button></div>`;
+            const { totals } = calculateMetrics(); const y = AppState.currentYear; const m = AppState.currentMonth;
+            const saldoContaCorrente = totals.renda - (totals.gastos + totals.investimentos + totals.reservaAtual);
+            const isMonthEmpty = totals.renda === 0 && totals.gastos === 0 && (totals.investimentos + totals.reservaAtual) === 0;
+
+            const expenseCats = Object.keys(AppState.currentData).filter(cat => {
+                if (['goals', 'itemMetadata', 'categoriesMetadata'].includes(cat)) return false;
+                const type = AppState.currentData.categoriesMetadata?.[cat] || CATEGORIES_CONFIG[cat]?.type || 'expense'; return type === 'expense' || type === 'investment';
             });
-            return html + `</div>`;
+            const defaultOrder = Object.keys(CATEGORIES_CONFIG);
+            const displayCategories = [ ...expenseCats.filter(c => !defaultOrder.includes(c)).reverse(), ...expenseCats.filter(c => defaultOrder.includes(c)) ];
+
+            const fixedItems = [];
+            displayCategories.forEach(cat => {
+                Object.entries(AppState.currentData[cat]).forEach(([name, val]) => {
+                    const type = AppState.currentData.itemMetadata?.[cat]?.[name] || 'variable';
+                    if(type === 'fixed') fixedItems.push({cat, name, val: Number(val)});
+                });
+            });
+
+            let html = '<div class="space-y-6 md:space-y-8">';
+            if (isMonthEmpty && (AppState.currentMonthIdx > 0 || parseInt(AppState.currentYear) > 2020)) {
+                let pMonth = AppState.currentMonthIdx - 1; let pYear = AppState.currentYear;
+                if (pMonth < 0) { pMonth = 11; pYear = (parseInt(AppState.currentYear) - 1).toString(); }
+                html += `<div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"><div class="flex items-center gap-3"><div class="p-2 bg-blue-100 rounded-lg shrink-0"><i data-lucide="copy" class="w-5 h-5 text-blue-600"></i></div><div><h4 class="font-bold text-blue-800 text-sm">Puxar dados passados?</h4><p class="text-xs text-blue-600">Copie as contas de ${MONTHS[pMonth]}/${pYear} para agilizar.</p></div></div><button onclick="AppActions.copyFromPreviousMonth()" class="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition-colors">Copiar Dados</button></div>`;
+            }
+
+            html += `<div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4"><div class="bg-white p-4 md:p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center items-center text-center"><span class="text-[9px] md:text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-1 flex items-center gap-1"><i data-lucide="home" class="w-3 h-3"></i> Total Gastos Fixos</span><span class="text-2xl md:text-3xl font-bold text-rose-600">${formatCurrency(totals.fixos)}</span></div><div class="bg-white p-4 md:p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center items-center text-center"><span class="text-[9px] md:text-[10px] font-bold text-orange-400 uppercase tracking-widest mb-1 flex items-center gap-1"><i data-lucide="smile" class="w-3 h-3"></i> Total Gastos Variáveis</span><span class="text-2xl md:text-3xl font-bold text-orange-500">${formatCurrency(totals.variaveis)}</span></div><div class="bg-emerald-50 p-4 md:p-5 rounded-3xl border border-emerald-100 shadow-sm flex flex-col justify-center items-center text-center"><span class="text-[9px] md:text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Saldo Conta Corrente</span><span class="text-2xl md:text-3xl font-bold text-emerald-700">${formatCurrency(saldoContaCorrente)}</span><span class="text-[8px] md:text-[9px] text-emerald-600/80 mt-1">Renda - (Gastos + Investimentos)</span></div></div><div class="bg-rose-50 border border-rose-100 rounded-3xl p-4 md:p-5 shadow-sm"><div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 border-b border-rose-100 pb-3 gap-3"><div><h3 class="font-bold text-rose-800 uppercase text-xs md:text-sm tracking-wide flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 md:w-5 md:h-5"></i> Custo de Vida Mensal</h3><p class="text-[10px] md:text-[11px] text-rose-600 mt-1">Contas marcadas como "Fixo" nas categorias abaixo.</p></div><span class="text-rose-700 font-bold bg-rose-200/50 px-3 py-1.5 rounded-lg text-xs md:text-sm whitespace-nowrap self-start sm:self-auto">Total: ${formatCurrency(totals.fixos)}</span></div><div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-3">${fixedItems.map(item => `<div class="bg-white p-2.5 rounded-xl shadow-sm border border-rose-50 flex flex-col justify-between gap-1"><span class="text-[8px] md:text-[9px] font-bold text-rose-400 uppercase tracking-widest truncate">${item.cat}</span><span class="text-[11px] md:text-xs font-bold text-slate-700 truncate" title="${item.name}">${item.name}</span><span class="text-xs md:text-sm font-bold text-rose-600">${formatCurrency(item.val)}</span></div>`).join('')}${fixedItems.length===0?'<div class="col-span-full text-xs text-rose-400 italic py-2">Nenhuma despesa marcada como fixa.</div>':''}</div></div><div class="flex flex-col md:flex-row md:items-end justify-between gap-3 border-b border-slate-200 pb-4"><div><h2 class="text-lg md:text-xl font-bold text-slate-800">Categorias de Despesas</h2><p class="text-[11px] md:text-xs text-slate-500 mt-1">Adicione contas e marque-as como FIXO ou VAR (Variável).</p></div><button onclick="AppActions.addCategory('${y}', '${m}')" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md w-full md:w-auto transition-colors"><i data-lucide="plus" class="w-4 h-4"></i> Nova Categoria</button></div><div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">`;
+
+            displayCategories.forEach(cat => {
+                const items = AppState.currentData[cat]; const total = Object.values(items).reduce((a, b) => a + Number(b||0), 0);
+                const theme = getCategoryIconAndColor(cat); const isInvest = (AppState.currentData.categoriesMetadata?.[cat] || CATEGORIES_CONFIG[cat]?.type) === 'investment';
+                html += `<div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-4 flex flex-col h-full relative group/card hover:shadow-md transition-shadow"><div class="flex flex-col gap-3 mb-4 pb-4 border-b border-slate-100"><div class="flex justify-between items-start gap-2"><div class="flex items-center gap-2 flex-1"><div class="p-2 rounded-xl ${theme.bg}"><i data-lucide="${theme.icon.toLowerCase()}" class="w-4 h-4 ${theme.color}"></i></div><input type="text" value="${cat}" onblur="AppActions.renameCategory('${y}', '${m}', '${cat}', this)" class="font-bold text-slate-800 text-sm outline-none bg-transparent hover:bg-slate-50 focus:bg-blue-50 focus:text-blue-700 rounded px-2 py-1 w-full uppercase tracking-wide transition-colors"></div><button onclick="AppActions.deleteCategory('${y}', '${m}', '${cat}')" class="text-slate-300 hover:text-rose-500 p-1 opacity-0 group-hover/card:opacity-100 bg-white rounded-full shadow-sm border border-slate-100 transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button></div><div class="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100"><span class="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider pl-2">Total na Categoria</span><span class="font-bold text-slate-800 text-xs sm:text-sm">${formatCurrency(total)}</span></div></div><div class="space-y-2 flex-1 mb-4">${Object.keys(items).length === 0 ? '<div class="text-xs text-slate-400 italic text-center py-6 bg-slate-50 rounded-xl border border-dashed border-slate-200">Nenhuma conta cadastrada.</div>' : ''}${Object.entries(items).map(([itemName, itemVal]) => { const t = AppState.currentData.itemMetadata?.[cat]?.[itemName] || (isInvest?'variavel':'variable'); return renderEditableRowHTML(itemName, itemVal, t, false, isInvest, cat); }).join('')}</div><div class="mt-auto"><button onclick="AppActions.addItem('${y}', '${m}', '${cat}')" class="w-full bg-blue-50/50 hover:bg-blue-500 text-blue-600 hover:text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 shadow-sm transition-colors"><i data-lucide="plus" class="w-3 h-3"></i> Adicionar Conta</button></div></div>`;
+            });
+
+            html += '</div></div>'; return html;
         }
 
-        function renderPlanejamento() { return renderDashboard(); }
-        function renderInvestimento() { return renderDashboard(); }
-        function renderHistorico() { return renderDashboard(); }
+        function renderPlanejamento() {
+            const { totals } = calculateMetrics(); const y = AppState.currentYear; const m = AppState.currentMonth;
+            const goals = AppState.currentData?.goals || {}; const goalEntries = Object.entries(goals);
+            
+            let totalGoal = 0; goalEntries.forEach(([id, g]) => totalGoal += Number(g.value));
+            const isExc = totalGoal > 100;
+            const chartData = goalEntries.map(([id, g]) => ({ name: g.label, value: g.value, hex: GOAL_COLORS[g.color]?.hex || '#94a3b8' })).filter(d => d.value > 0);
+            const chartColors = chartData.map(d => d.hex);
 
+            setTimeout(() => { if(chartData.length>0) createPieChart('chart-plan', chartData, chartColors, 'doughnut'); }, 0);
+
+            const alertCard = (title, actual, planned) => {
+                const isOk = actual <= planned; const p = planned>0 ? (actual/planned)*100 : 0;
+                return `<div class="p-4 rounded-xl border ${isOk ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}"><div class="flex justify-between items-center mb-3"><span class="font-bold text-[10px] md:text-xs text-slate-600 uppercase tracking-wide">${title}</span><span class="text-[10px] md:text-xs font-bold px-2 py-1 rounded flex items-center gap-1 ${isOk?'bg-emerald-200 text-emerald-800':'bg-rose-200 text-rose-800'}"><i data-lucide="${isOk?'check-circle-2':'alert-triangle'}" class="w-3 h-3"></i> ${isOk?'OK':'ACIMA'}</span></div><div class="flex justify-between items-end"><span class="text-2xl md:text-3xl font-bold ${isOk?'text-emerald-700':'text-rose-700'}">${p.toFixed(0)}%</span><div class="text-right flex flex-col"><span class="text-[10px] md:text-xs text-slate-500 line-through decoration-slate-300">${formatCurrency(planned)}</span><span class="text-xs md:text-sm font-bold ${isOk?'text-emerald-700':'text-rose-700'}">${formatCurrency(actual)}</span></div></div><div class="mt-3 w-full bg-white/50 rounded-full h-1.5 overflow-hidden"><div class="h-full transition-all ${isOk?'bg-emerald-500':'bg-rose-500'}" style="width: ${Math.min(100, p)}%"></div></div></div>`;
+            };
+
+            let slidersHTML = goalEntries.map(([id, g]) => {
+                const plannedValue = (g.value / 100) * totals.renda; const colorData = GOAL_COLORS[g.color] || GOAL_COLORS.blue;
+                const isCustom = !['fixed', 'variable', 'investment'].includes(id);
+                const labelHTML = isCustom ? `<input type="text" value="${g.label}" onblur="AppActions.renameGoal('${y}', '${m}', '${id}', this)" class="bg-transparent font-semibold text-slate-700 outline-none hover:bg-slate-50 border-b border-dashed border-slate-300 w-28 sm:w-32" placeholder="Nome">` : `<span>${g.label}</span>`;
+                const removeBtn = isCustom ? `<button onclick="AppActions.removeGoal('${y}', '${m}', '${id}')" class="ml-2 text-rose-400 hover:text-rose-600" title="Remover"><i data-lucide="x" class="w-3 h-3"></i></button>` : '';
+
+                return `<div class="mb-5"><div class="flex justify-between text-xs md:text-sm mb-2 font-semibold text-slate-700 items-center"><div class="flex items-center">${labelHTML} ${removeBtn}</div><div class="flex gap-3 items-center"><span class="text-slate-400" id="plan-val-${id}">${formatCurrency(plannedValue)}</span><span id="goal-val-${id}" class="${colorData.text}">${g.value}%</span></div></div><input type="range" min="0" max="100" value="${g.value}" class="goal-slider w-full h-3 md:h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer" style="accent-color: ${colorData.hex};" oninput="AppActions.handleGoalInput('${id}', this.value, ${totals.renda})" onchange="AppActions.handleGoalChange('${y}', '${m}', '${id}', this.value)"></div>`;
+            }).join('');
+
+            return `<div class="grid grid-cols-1 lg:grid-cols-12 gap-6"><div class="lg:col-span-5 space-y-6"><div class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200"><h3 class="font-bold text-slate-800 uppercase text-xs md:text-sm tracking-wide mb-6">Definição de Metas (%)</h3><div>${slidersHTML}</div><button onclick="AppActions.addGoal('${y}', '${m}')" class="mt-2 w-full border border-dashed border-slate-300 text-slate-500 hover:bg-slate-50 hover:text-blue-600 font-bold text-xs py-2 rounded-xl flex justify-center items-center gap-1 transition-colors"><i data-lucide="plus" class="w-3 h-3"></i> Adicionar Novo Objetivo</button><div class="mt-8 pt-6 border-t border-slate-100"><div class="flex justify-between text-[10px] md:text-xs font-bold text-slate-500 mb-2 uppercase"><span>Uso do Orçamento</span><span id="plan-total-text" class="${isExc?'text-rose-500':'text-blue-600'}">${totalGoal}%</span></div><div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden"><div id="plan-total-bar" class="h-full transition-all ${isExc?'bg-rose-500':'bg-blue-500'}" style="width: ${Math.min(100, totalGoal)}%"></div></div><p id="plan-exc-msg" class="text-xs text-rose-500 mt-2 text-center" style="display: ${isExc ? 'block' : 'none'}">A soma das metas não deve exceder 100%.</p></div></div></div><div class="lg:col-span-7 space-y-6"><div class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200"><h3 class="font-bold text-slate-800 uppercase text-xs md:text-sm tracking-wide text-center mb-4">Distribuição Planejada</h3><div class="flex justify-center w-full py-4"><div class="h-56 w-56 md:h-64 md:w-64 relative"><canvas id="chart-plan"></canvas></div></div></div><div class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200"><h3 class="font-bold text-slate-800 uppercase text-xs md:text-sm tracking-wide mb-4">Alertas de Categoria</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-4">${goalEntries.map(([id, g]) => { let actual = 0; if (id === 'fixed') actual = totals.fixos; else if (id === 'variable') actual = totals.variaveis; else if (id === 'investment') actual = totals.investimentos + totals.reservaAtual; else actual = getCategoryTotal(y, m, g.label); const planned = (g.value/100) * totals.renda; if (id !== 'fixed' && id !== 'variable' && id !== 'investment' && planned === 0 && actual === 0) return ''; return alertCard(g.label, actual, planned); }).join('')}</div></div></div></div>`;
+        }
+
+        function renderInvestimento() {
+            const y = AppState.currentYear; const m = AppState.currentMonth; const meta = AppState.currentData.categoriesMetadata || DEFAULT_METADATA;
+            const investCats = Object.keys(AppState.currentData).filter(c => !['goals', 'itemMetadata', 'categoriesMetadata'].includes(c) && (meta[c] || CATEGORIES_CONFIG[c]?.type) === 'investment');
+            
+            let list = []; investCats.forEach(cat => { Object.entries(AppState.currentData[cat]).forEach(([name, val]) => { const type = AppState.currentData.itemMetadata?.[cat]?.[name] || (name.toLowerCase().includes('reserva')?'reserva':name.toLowerCase().includes('fixa')?'fixa':'variavel'); const inst = AppState.currentData.itemMetadata?.[cat]?.[`${name}_inst`] || ''; list.push({cat, name, val: Number(val), type, inst}); }); });
+            const totalInv = list.filter(i => i.type!=='reserva').reduce((a,b)=>a+b.val,0); const totalRes = list.filter(i => i.type==='reserva').reduce((a,b)=>a+b.val,0); const patLiq = totalInv + totalRes;
+            const tTotals = { 'Reserva': totalRes, 'Renda Fixa': list.filter(i=>i.type==='fixa').reduce((a,b)=>a+b.val,0), 'Renda Variável': list.filter(i=>i.type==='variavel').reduce((a,b)=>a+b.val,0) };
+            const chartData = [{name:'Reserva',value:tTotals['Reserva']},{name:'Renda Fixa',value:tTotals['Renda Fixa']},{name:'Renda Variável',value:tTotals['Renda Variável']}].filter(d=>d.value>0);
+
+            setTimeout(() => { if(chartData.length>0) createPieChart('chart-inv', chartData, COLORS_INVEST, 'doughnut'); }, 0);
+
+            return `<div class="grid grid-cols-1 lg:grid-cols-12 gap-6"><div class="lg:col-span-8 space-y-6"><div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden"><div class="px-5 md:px-8 py-4 md:py-5 flex flex-wrap gap-3 items-center justify-between border-b border-slate-100"><h3 class="font-extrabold text-slate-800 uppercase text-xs md:text-[13px] tracking-widest">Meus Ativos</h3><button onclick="AppActions.addItem('${y}', '${m}', 'Investimento', 'Novo Ativo', 'variavel')" class="text-[10px] md:text-xs font-bold text-white bg-blue-500 px-3 md:px-4 py-2 rounded-xl flex items-center gap-1 hover:bg-blue-600 transition-colors shadow-sm"><i data-lucide="plus" class="w-3 h-3"></i> Novo Ativo</button></div><div class="overflow-x-auto p-2"><table class="w-full text-sm text-left text-slate-500 min-w-full"><thead class="hidden sm:table-header-group text-[10px] text-slate-400 uppercase tracking-wider border-b border-slate-100"><tr><th class="px-4 sm:px-6 py-4 font-extrabold">Ativo</th><th class="px-4 sm:px-6 py-4 font-extrabold">Instituição</th><th class="px-4 sm:px-6 py-4 font-extrabold">Tipo</th><th class="px-4 sm:px-6 py-4 font-extrabold text-right">Valor</th><th class="px-2 sm:px-3 py-4"></th></tr></thead><tbody class="flex flex-col sm:table-row-group">${list.map(i => { const inputId = `input-inv-${safeId(i.cat)}-${safeId(i.name)}`; const nameInputId = `input-name-${safeId(i.cat)}-${safeId(i.name)}`; return `<tr class="bg-white border-b border-slate-100 hover:bg-slate-50/50 transition-colors flex flex-col sm:table-row mb-4 sm:mb-0 p-3 sm:p-0 rounded-xl sm:rounded-none shadow-sm sm:shadow-none border sm:border-0 sm:border-b"><td class="px-2 sm:px-6 py-2 sm:py-3 border-b border-slate-50 sm:border-0"><div class="flex sm:block items-center justify-between mb-1 sm:mb-0"><span class="sm:hidden text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ativo</span><input id="${nameInputId}" type="text" value="${i.name}" onblur="AppActions.renameItem('${y}', '${m}', '${i.cat}', '${i.name}', this)" class="font-medium text-slate-900 bg-transparent outline-none w-full sm:min-w-[120px] hover:bg-slate-100 focus:bg-white rounded px-2 py-1 text-xs sm:text-sm text-right sm:text-left"></div></td><td class="px-2 sm:px-6 py-2 sm:py-3 border-b border-slate-50 sm:border-0"><div class="flex sm:block items-center justify-between"><span class="sm:hidden text-[10px] font-bold text-slate-400 uppercase tracking-wider">Instituição</span><input type="text" value="${i.inst}" onblur="AppActions.handleInstChange('${y}', '${m}', '${i.cat}', '${i.name}', this.value)" class="font-medium text-slate-500 bg-transparent outline-none w-full sm:min-w-[100px] hover:bg-slate-100 focus:bg-white rounded px-2 py-1 text-xs sm:text-sm text-right sm:text-left" placeholder="Ex: Itaú..."></div></td><td class="px-2 sm:px-6 py-2 sm:py-3 border-b border-slate-50 sm:border-0"><div class="flex sm:block items-center justify-between"><span class="sm:hidden text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tipo</span><select onchange="AppActions.handleTypeChange('${y}', '${m}', '${i.cat}', '${i.name}', this.value)" class="text-[10px] font-bold px-2 py-1.5 rounded outline-none uppercase ${i.type==='reserva'?'bg-blue-100 text-blue-700':i.type==='fixa'?'bg-emerald-100 text-emerald-700':'bg-purple-100 text-purple-700'}"><option value="reserva" ${i.type==='reserva'?'selected':''}>Reserva</option><option value="fixa" ${i.type==='fixa'?'selected':''}>Fixa</option><option value="variavel" ${i.type==='variavel'?'selected':''}>Variável</option></select></div></td><td class="px-2 sm:px-6 py-2 sm:py-3 text-right flex sm:table-cell items-center justify-between sm:justify-end"><span class="sm:hidden text-[10px] font-bold text-slate-400 uppercase tracking-wider">Valor</span><div class="relative inline-flex items-center justify-end"><span class="absolute right-[80px] sm:right-[110px] text-[9px] sm:text-[10px] font-bold text-slate-400 pointer-events-none">R$</span><input id="${inputId}" type="text" inputmode="numeric" value="${formatCurrencyInput(i.val)}" oninput="AppActions.handleInputDebounced('${y}', '${m}', '${i.cat}', '${i.name}', this)" onblur="AppActions.handleBlur('${y}', '${m}', '${i.cat}', '${i.name}', this)" onkeydown="if(event.key==='Enter')this.blur()" class="w-20 sm:w-24 !pl-4 sm:!pl-6 !pr-2 !py-1 border border-slate-100 bg-slate-50/50 focus:bg-white text-right font-bold text-xs sm:text-sm rounded-lg outline-none"></div></td><td class="px-2 sm:px-3 py-2 sm:py-3 text-center"><button onclick="AppActions.deleteItem('${y}', '${m}', '${i.cat}', '${i.name}')" class="text-rose-500 hover:text-rose-700 p-2 sm:p-1 w-full sm:w-auto flex justify-center items-center gap-1 bg-rose-50 sm:bg-transparent rounded-lg mt-2 sm:mt-0 text-xs sm:text-base font-bold sm:font-normal"><i data-lucide="x" class="w-4 h-4"></i><span class="sm:hidden">Excluir</span></button></td></tr>`}).join('')}${list.length===0?'<tr><td colspan="5" class="py-8 text-center text-slate-400 italic text-xs sm:text-sm">Nenhum investimento registrado.</td></tr>':''}</tbody></table></div><div class="px-5 md:px-6 py-3 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center"><span class="text-xs md:text-sm font-bold text-slate-700">Total Investido (Exclui Reserva)</span><span class="text-xs md:text-sm font-bold text-blue-600">${formatCurrency(totalInv)}</span></div></div><div class="bg-[#f0f7ff] rounded-3xl p-5 md:p-8 border border-blue-100/50"><h3 class="font-extrabold text-blue-800 mb-2 flex items-center gap-2 text-xs md:text-sm uppercase tracking-widest"><i data-lucide="book-open" class="w-4 h-4 text-blue-600"></i> Aprenda Antes de Investir</h3><p class="text-[11px] md:text-xs text-blue-700 mb-6 leading-relaxed">Investir sem conhecimento é como dirigir no escuro. Entenda o risco de cada ativo e nunca invista no que não compreende.</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">${[{t:'1. RESERVA PRIMEIRO',d:'Garanta sua reserva de emergência antes de ir para a bolsa.'},{t:'2. DIVERSIFICAÇÃO',d:'Divida entre Renda Fixa e Variável.'},{t:'3. FOCO NO LONGO PRAZO',d:'Serve para multiplicar patrimônio no tempo, não ficar rico rápido.'},{t:'4. ESTUDE TAXAS E IR',d:'Taxas e impostos podem "comer" boa parte da sua rentabilidade.'}].map(x=>`<div class="bg-white p-4 rounded-2xl border border-blue-50"><h4 class="font-extrabold text-blue-800 text-[10px] md:text-[11px] uppercase tracking-wide mb-1.5">${x.t}</h4><p class="text-[10px] md:text-[11px] text-slate-500">${x.d}</p></div>`).join('')}</div></div></div><div class="lg:col-span-4 space-y-6"><div class="bg-[#0f172a] rounded-3xl p-6 md:p-8 text-white shadow-xl"><div class="mb-6"><h4 class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Reserva de Emergência</h4><p class="text-2xl md:text-3xl font-black text-blue-500">${formatCurrency(totalRes)}</p></div><div class="mb-6 pt-6 border-t border-slate-800"><h4 class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Total em Investimentos</h4><p class="text-xl md:text-2xl font-black text-emerald-400">${formatCurrency(totalInv)}</p></div><div class="pt-6 border-t border-slate-800 flex justify-between items-center mt-2"><h4 class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Patrimônio Líquido</h4><p class="text-lg md:text-xl font-bold text-white">${formatCurrency(patLiq)}</p></div></div><div class="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-slate-200"><h3 class="font-extrabold text-blue-700 uppercase text-[10px] md:text-[11px] tracking-widest text-center mb-6">Alocação por Tipo</h3>${chartData.length>0 ? `<div class="flex justify-center w-full py-4"><div class="h-48 w-48 md:h-56 md:w-56 relative"><canvas id="chart-inv"></canvas></div></div><div class="mt-4 space-y-3">${chartData.map((d,i)=>{ const pct = ((d.value / chartData.reduce((a,b)=>a+b.value,0)) * 100).toFixed(1); return `<div class="flex justify-between text-xs items-center p-2"><div class="flex items-center gap-3"><div class="w-3 h-3 rounded-full shrink-0" style="background-color:${COLORS_INVEST[i%COLORS_INVEST.length]}"></div><span class="text-slate-600 font-bold text-[10px] md:text-[11px] uppercase tracking-wide">${d.name}</span></div><div class="text-right"><span class="font-extrabold text-slate-800 block">${formatCurrency(d.value)}</span><span class="text-[9px] text-slate-400 font-medium">${pct}%</span></div></div>`; }).join('')}</div>` : '<div class="h-40 flex flex-col items-center justify-center text-slate-400 text-xs md:text-sm italic">Nenhum investimento registrado.</div>'}</div></div></div>`;
+        }
+
+        function renderHistorico() {
+            const { metrics, historyData } = calculateMetrics(); const progPct = Math.min(100, (metrics.reservaTotalAcumulada / (metrics.metaReserva12m||1)) * 100); const falta = Math.max(0, metrics.metaReserva12m - metrics.reservaTotalAcumulada);
+            return `<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"><div class="lg:col-span-5 space-y-6"><div class="bg-white p-5 md:p-8 rounded-3xl shadow-sm border border-slate-200"><h3 class="text-[11px] md:text-[13px] font-extrabold text-blue-600 uppercase tracking-widest mb-6">Meta de Segurança</h3><div class="flex flex-col sm:flex-row gap-3 md:gap-4 mb-6 md:mb-8"><div class="flex-1 bg-slate-50 p-4 md:p-5 rounded-2xl border border-slate-100 flex flex-col justify-center"><p class="text-[9px] md:text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Segurança (6 Meses)</p><p class="text-xl md:text-2xl font-black text-slate-800">${formatCurrency(metrics.metaReserva6m)}</p></div><div class="flex-1 bg-[#f0f7ff] p-4 md:p-5 rounded-2xl border border-blue-100 flex flex-col justify-center"><p class="text-[9px] md:text-[10px] font-bold text-blue-500 mb-1.5 uppercase">Ideal (12 Meses)</p><p class="text-xl md:text-2xl font-black text-blue-600">${formatCurrency(metrics.metaReserva12m)}</p></div></div><div><div class="flex justify-between items-end mb-1.5"><div><span class="text-[10px] md:text-[11px] font-extrabold text-slate-700 block uppercase tracking-widest mb-1">Progresso Atual</span><span class="text-[9px] md:text-[11px] italic text-slate-400 font-medium">${formatCurrency(metrics.reservaTotalAcumulada)} / ${formatCurrency(metrics.metaReserva12m)}</span></div><div class="text-right"><span class="text-lg md:text-xl font-black text-blue-600 block leading-none mb-1.5">${progPct.toFixed(0)}%</span><span class="text-[9px] md:text-[10px] font-extrabold text-rose-500 uppercase tracking-wider">Falta: ${formatCurrency(falta)}</span></div></div><div class="w-full bg-[#f1f5f9] rounded-xl h-10 md:h-11 mt-4 flex items-center justify-center relative overflow-hidden shadow-inner border border-slate-200/50"><div class="absolute left-0 top-0 h-full bg-blue-500 transition-all duration-1000" style="width: ${progPct}%"></div><span class="relative z-10 text-xs md:text-[13px] font-bold ${progPct>50?'text-white':'text-slate-800'}">${formatCurrency(metrics.reservaTotalAcumulada)}</span></div></div></div><div class="bg-white p-5 md:p-8 rounded-3xl shadow-sm border border-slate-200"><h3 class="text-[11px] md:text-[13px] font-extrabold text-slate-800 uppercase tracking-widest mb-6">O que é a reserva?</h3><div class="space-y-6">${[{i:'shield-check',c:'blue',t:'Para que serve?',d:'Cobre imprevistos como demissão ou saúde sem precisar de empréstimos.'},{i:'help-circle',c:'amber',t:'Quanto guardar?',d:'O ideal é ter entre 6 e 12 meses do seu custo de vida atual guardado.'},{i:'trending-up',c:'emerald',t:'Onde investir?',d:'Priorize Liquidez Diária e Baixo Risco (Tesouro Selic, CDB 100% DI).'}].map(x=>`<div class="flex gap-3 md:gap-4"><div class="w-10 h-10 md:w-12 h-12 rounded-2xl bg-${x.c}-50 flex items-center justify-center shrink-0 border border-${x.c}-100/50"><i data-lucide="${x.i}" class="w-5 h-5 md:w-6 h-6 text-${x.c}-500"></i></div><div><h4 class="font-extrabold text-slate-800 text-[11px] md:text-xs uppercase tracking-wide">${x.t}</h4><p class="text-[10px] md:text-[11px] text-slate-500 mt-1.5 leading-relaxed">${x.d}</p></div></div>`).join('')}</div></div></div><div class="lg:col-span-7"><div class="bg-white p-4 md:p-8 rounded-3xl shadow-sm border border-slate-200 h-full"><h3 class="text-[11px] md:text-[13px] font-extrabold text-slate-800 uppercase tracking-widest mb-6">Histórico em ${AppState.currentYear}</h3><div class="overflow-x-auto scrollbar-hide"><table class="w-full text-sm text-left min-w-[450px]"><thead class="text-[9px] md:text-[10px] text-slate-400 uppercase border-b border-slate-100"><tr><th class="pb-3 md:pb-4 font-bold tracking-widest">Mês</th><th class="pb-3 md:pb-4 font-bold tracking-widest">Renda</th><th class="pb-3 md:pb-4 font-bold tracking-widest">Gastos</th><th class="pb-3 md:pb-4 font-bold tracking-widest">Investido</th><th class="pb-3 md:pb-4 font-bold tracking-widest text-right">Sobrou</th></tr></thead><tbody>${historyData.map(d => `<tr class="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors"><td class="py-3 md:py-4 font-extrabold text-slate-700 text-[10px] md:text-xs tracking-wide lowercase whitespace-nowrap">${d.month.substring(0,3)}/${AppState.currentYear}</td><td class="py-3 md:py-4 text-emerald-600 font-bold text-[10px] md:text-xs whitespace-nowrap">${formatCurrency(d.renda)}</td><td class="py-3 md:py-4 text-rose-600 font-bold text-[10px] md:text-xs whitespace-nowrap">${formatCurrency(d.gastos)}</td><td class="py-3 md:py-4 text-blue-600 font-bold text-[10px] md:text-xs whitespace-nowrap">${formatCurrency(d.investido)}</td><td class="py-3 md:py-4 text-right font-black text-xs md:text-sm whitespace-nowrap ${d.saldo>=0?'text-emerald-700':'text-rose-600'}">${formatCurrency(d.saldo)}</td></tr>`).join('')}${historyData.length===0?'<tr><td colspan="5" class="py-8 text-center text-slate-400 italic text-xs md:text-sm">Nenhum histórico disponível.</td></tr>':''}</tbody></table></div></div></div></div>`;
+        }
+
+        // --- SISTEMA DE RENDERIZAÇÃO (MAIN) ---
         function renderHeader() {
-            const tabs = [ { id: 'dashboard', label: 'Dashboard' }, { id: 'renda', label: 'Renda' }, { id: 'gastos', label: 'Gastos' } ];
-            return `<header class="bg-white border-b sticky top-0 z-20 shadow-sm">
-                <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col lg:flex-row justify-between items-center gap-4">
-                    <div class="flex items-center justify-between w-full lg:w-auto">
-                        <div class="flex items-center gap-2">
-                            <img src="logo.png" alt="Lumis Logo" class="h-[400px] w-auto object-contain">
-                        </div>
-                        <div id="sync-status-mobile" class="lg:hidden"></div>
-                    </div>
-                    <div class="flex flex-col sm:flex-row items-center gap-3">
-                        <div class="flex items-center border bg-slate-50 rounded-lg p-1">
-                            <button onclick="AppActions.changeYear(-1)" class="p-2"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-                            <span class="px-2 font-bold">${AppState.currentYear}</span>
-                            <button onclick="AppActions.changeYear(1)" class="p-2"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
-                            <div class="mx-2 border-l h-4"></div>
-                            <button onclick="AppActions.prevMonth()" class="p-2"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-                            <span class="px-2 font-bold uppercase text-[10px] tracking-widest">${AppState.currentMonth}</span>
-                            <button onclick="AppActions.nextMonthConfirm()" class="p-2"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
-                        </div>
-                        <div id="sync-status-desktop" class="hidden lg:block"></div>
-                        <button onclick="AppActions.sair()" class="px-4 py-2 bg-rose-50 text-rose-600 rounded-lg text-xs font-bold border border-rose-200">Sair</button>
-                    </div>
-                </div>
-                <div class="max-w-7xl mx-auto px-4 flex overflow-x-auto scrollbar-hide border-t lg:justify-center">
-                    ${tabs.map(t => `<button onclick="AppActions.changeTab('${t.id}')" class="py-4 px-4 text-xs font-bold whitespace-nowrap border-b-2 transition-all ${AppState.activeTab === t.id ? 'border-blue-500 text-blue-600' : 'border-transparent text-slate-400'}">${t.label}</button>`).join('')}
-                </div>
-            </header>`;
+            const tabs = [ { id: 'dashboard', label: 'Dashboard' }, { id: 'renda', label: 'Renda' }, { id: 'gastos', label: 'Gastos' }, { id: 'planejamento', label: 'Planejamento' }, { id: 'investimento', label: 'Investimentos' }, { id: 'historico', label: 'Reserva e Histórico' } ];
+            let statusHTML = '';
+            if (AppState.errorMsg) statusHTML = `<span class="flex items-center gap-1 text-rose-500"><i data-lucide="alert-circle" class="w-4 h-4"></i> <span class="hidden lg:inline">${AppState.errorMsg}</span></span>`;
+            else if (AppState.saving) statusHTML = `<span class="flex items-center gap-1 text-slate-500"><i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> <span class="hidden lg:inline">Salvando...</span></span>`;
+            else statusHTML = `<span class="flex items-center gap-1 text-emerald-600"><i data-lucide="save" class="w-4 h-4"></i> <span class="hidden lg:inline">Sincronizado</span></span>`;
+
+            return `<header class="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm"><div class="max-w-7xl mx-auto px-4 py-3 md:py-4 flex flex-col lg:flex-row justify-between items-center gap-3 md:gap-4"><div class="flex items-center justify-between w-full lg:w-auto"><div class="flex items-center gap-2"><img src="logo.png" alt="Lumis Logo" class="h-48 w-auto object-contain"></div><div class="flex lg:hidden items-center gap-1.5 text-[10px] font-medium" id="sync-status-mobile">${statusHTML}</div></div><div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto"><div class="flex items-center justify-between border border-slate-200 bg-slate-50 rounded-lg p-1 w-full sm:w-auto"><div class="flex items-center border-r border-slate-200 pr-1 mr-1"><button onclick="AppActions.changeYear(-1)" class="p-1.5 md:p-2 hover:bg-white rounded transition-colors"><i data-lucide="chevron-left" class="w-3 h-3 md:w-4 md:h-4"></i></button><div class="font-bold text-xs md:text-sm text-slate-700 px-1 md:px-2">${AppState.currentYear}</div><button onclick="AppActions.changeYear(1)" class="p-1.5 md:p-2 hover:bg-white rounded transition-colors"><i data-lucide="chevron-right" class="w-3 h-3 md:w-4 md:h-4"></i></button></div><div class="flex items-center"><button onclick="AppActions.prevMonth()" ${AppState.currentMonthIdx === 0 ? 'disabled' : ''} class="p-1.5 md:p-2 disabled:opacity-30 hover:bg-white rounded transition-colors"><i data-lucide="chevron-left" class="w-4 h-4"></i></button><div class="font-bold text-xs md:text-sm text-slate-700 uppercase tracking-widest px-2 md:px-4">${AppState.currentMonth}</div><button onclick="AppActions.nextMonthConfirm()" ${AppState.currentMonthIdx === 11 ? 'disabled' : ''} class="p-1.5 md:p-2 disabled:opacity-30 hover:bg-white rounded transition-colors"><i data-lucide="chevron-right" class="w-4 h-4"></i></button></div></div><div class="hidden lg:flex items-center gap-2 text-xs font-medium whitespace-nowrap px-2" id="sync-status-desktop">${statusHTML}</div><div class="flex items-center gap-2 w-full sm:w-auto"><a href="COLE_SEU_LINK_DO_PORTAL_AQUI" target="_blank" class="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-3 md:px-4 py-2 md:py-2.5 bg-[#f0f7ff] text-blue-700 border border-blue-200 rounded-lg text-xs md:text-sm font-bold hover:bg-blue-100 transition-colors"><i data-lucide="credit-card" class="w-3.5 h-3.5 md:w-4 md:h-4"></i> Assinatura</a><button onclick="AppActions.sair()" class="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-3 md:px-4 py-2 md:py-2.5 bg-rose-50 text-rose-600 border border-rose-200 rounded-lg text-xs md:text-sm font-bold hover:bg-rose-100 transition-colors"><i data-lucide="log-out" class="w-3.5 h-3.5 md:w-4 md:h-4"></i> Sair</button></div></div></div><div class="border-t border-slate-100 w-full overflow-x-auto scrollbar-hide"><div class="max-w-7xl mx-auto px-2 sm:px-4 flex flex-nowrap justify-start lg:justify-center gap-1 sm:gap-4 md:gap-8">${tabs.map(t => `<button onclick="AppActions.changeTab('${t.id}')" class="py-3 md:py-4 px-3 md:px-4 border-b-2 transition-colors whitespace-nowrap text-xs md:text-sm font-bold ${AppState.activeTab === t.id ? 'border-blue-500 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}">${t.label}</button>`).join('')}</div></div></header>`;
         }
 
         function renderModal() {
             const root = document.getElementById('modal-root');
-            if (AppState.confirmMonthChange !== null) root.innerHTML = `<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4"><div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl"><h3>Mudar mês?</h3><div class="flex justify-end gap-3 mt-6"><button onclick="AppActions.closeModal()">Não</button><button onclick="AppActions.confirmMonthChange()" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Sim</button></div></div></div>`;
-            else root.innerHTML = '';
+            if (AppState.confirmMonthChange !== null) {
+                root.innerHTML = `<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm px-4"><div class="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl"><h3 class="text-lg md:text-xl font-bold text-slate-800 mb-2">Fechar o mês?</h3><p class="text-xs md:text-sm text-slate-500 mb-6">Tem certeza que deseja fechar <strong>${AppState.currentMonth}</strong> e ir para o mês seguinte?</p><div class="flex gap-3 justify-end"><button onclick="AppActions.closeModal()" class="px-4 py-2 rounded-xl text-xs md:text-sm font-bold text-slate-600 hover:bg-slate-100 transition-colors">Cancelar</button><button onclick="AppActions.confirmMonthChange()" class="px-4 py-2 rounded-xl text-xs md:text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors">Sim, fechar mês</button></div></div></div>`;
+            } else { root.innerHTML = ''; }
         }
 
         function renderApp() {
             if (AppState.loading) return;
-            const root = document.getElementById('app-root'); destroyCharts();
-            let content = '';
-            if(AppState.activeTab === 'dashboard') content = renderDashboard();
-            else if(AppState.activeTab === 'renda') content = renderRenda();
-            else if(AppState.activeTab === 'gastos') content = renderGastos();
-            root.innerHTML = `${renderHeader()}<main class="max-w-7xl mx-auto px-4 mt-8">${content}</main>`;
+            const root = document.getElementById('app-root');
+            const activeEl = document.activeElement;
+            const focusState = (activeEl && activeEl.id) ? { id: activeEl.id, selectionStart: activeEl.selectionStart, selectionEnd: activeEl.selectionEnd } : null;
+
+            destroyCharts();
+
+            let contentHTML = '';
+            if(AppState.activeTab === 'dashboard') contentHTML = renderDashboard();
+            else if(AppState.activeTab === 'renda') contentHTML = renderRenda();
+            else if(AppState.activeTab === 'gastos') contentHTML = renderGastos();
+            else if(AppState.activeTab === 'investimento') contentHTML = renderInvestimento();
+            else if(AppState.activeTab === 'planejamento') contentHTML = renderPlanejamento();
+            else if(AppState.activeTab === 'historico') contentHTML = renderHistorico();
+
+            root.innerHTML = `${renderHeader()}<main class="max-w-7xl mx-auto px-4 mt-6 md:mt-8">${contentHTML}</main>`;
             lucide.createIcons(); renderModal();
+
+            if (focusState && focusState.id) {
+                const el = document.getElementById(focusState.id);
+                if (el) {
+                    el.focus();
+                    try { if (el.tagName === 'INPUT' && (el.type === 'text' || el.type === 'tel')) el.setSelectionRange(focusState.selectionStart, focusState.selectionEnd); } catch(e){} 
+                }
+            }
         }
 
+        // --- INICIALIZAÇÃO DA AUTENTICAÇÃO COM SUPABASE E STRIPE ---
         async function initAuth() {
             try {
                 const { data: { user } } = await supabaseClient.auth.getUser();
-                if (!user) { AppActions.sair(); return; }
-                AppState.user = user; await loadDatabaseData();
-            } catch (error) { AppState.loading = false; renderApp(); }
+                if (!user) {
+                    AppActions.sair();
+                    return;
+                }
+                
+                // Validação de Assinatura (Bloqueio do App)
+                const { data: profile } = await supabaseClient
+                    .from('profiles')
+                    .select('subscription_status')
+                    .eq('id', user.id)
+                    .single();
+
+                if (!profile || profile.subscription_status !== 'active') {
+                    alert("Acesso restrito para assinantes. Redirecionando para ativação da conta!");
+                    window.location.href = `https://buy.stripe.com/test_28E4gB89g0EN075gaqcs800?client_reference_id=${user.id}`;
+                    return;
+                }
+
+                AppState.user = user;
+                
+                // Sucesso! Busca os dados e renderiza.
+                await loadDatabaseData();
+                
+            } catch (error) {
+                console.error("Auth error:", error);
+                AppState.errorMsg = "Erro na autenticação. Tente novamente.";
+                AppState.loading = false;
+                renderApp();
+            }
         }
+
+        // Inicia a aplicação
         initAuth();
+
     </script>
 </body>
 </html>
