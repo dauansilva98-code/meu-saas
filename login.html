@@ -68,25 +68,27 @@
     <div class="blob top-0 left-0"></div>
     <div class="blob bottom-0 right-0" style="animation-direction: alternate-reverse; animation-duration: 30s;"></div>
 
-    <!-- main wrapper com mx-auto e w-full para centralização absoluta -->
-    <main class="w-full max-w-[400px] mx-auto z-10 flex flex-col items-center justify-center">
+    <!-- main wrapper com mx-auto, w-full e tamanho ideal para PC/Celular -->
+    <main class="w-full max-w-[420px] mx-auto z-10 flex flex-col items-center justify-center">
         
         <div class="w-full text-center mb-6 sm:mb-8 flex flex-col items-center justify-center">
-            <!-- Removi as margens inferiores (mb-3/mb-4) que estavam aqui -->
-            <img src="logo.png" alt="Lumis Logo" class="w-48 sm:w-60 h-auto object-contain">
+            <!-- Logo principal com mx-auto garantindo o centro exato -->
+            <img src="logo.png" alt="Lumis Logo" class="w-48 sm:w-60 h-auto object-contain mx-auto">
             
-            <!-- Adicionei -mt-8 (margem negativa) para puxar o texto para cima -->
-            <h2 class="text-[12px] sm:text-[13px] font-extrabold text-[#64748b] uppercase tracking-[0.15em] relative z-10 -mt-6 sm:-mt-10">
+            <h2 class="w-full text-center text-[12px] sm:text-[13px] font-extrabold text-[#64748b] uppercase tracking-[0.15em] relative z-10 -mt-6 sm:-mt-8">
                 Organizador Financeiro
             </h2>
         </div>
 
         <div class="clean-card w-full p-6 sm:p-10">
-            <div class="space-y-5 sm:space-y-6 w-full">
+            <!-- text-left aqui garante que os campos e os textos se alinhem à esquerda -->
+            <div class="space-y-5 sm:space-y-6 w-full text-left">
                 
                 <div class="input-group w-full">
                     <label for="email" class="block text-left text-[11px] font-extrabold uppercase tracking-wider text-[#64748b] mb-2">E-mail de acesso</label>
                     <div class="relative group w-full">
+                        <!-- A tag span do ícone que estava faltando foi restaurada -->
+                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 group-focus-within:text-[#0040A1] transition-colors">
                             <i data-lucide="mail" class="w-5 h-5"></i>
                         </span>
                         <input type="email" id="email" 
