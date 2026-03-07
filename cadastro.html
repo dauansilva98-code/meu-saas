@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assinar Premium | Organizador Financeiro Pro</title>
+    <title>Assinar Premium | Lumis - Organizador Financeiro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -11,8 +11,9 @@
         
         body { 
             font-family: 'Inter', sans-serif; 
-            overflow: hidden;
-            /* Fundo sutil e elegante idêntico ao do login */
+            /* Correção CRUCIAL: Permite rolar a página no celular e evita corte lateral */
+            overflow-x: hidden;
+            overflow-y: auto; 
             background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
         }
         
@@ -60,35 +61,36 @@
         }
     </style>
 </head>
-<body class="min-h-[100dvh] w-full flex items-center justify-center p-4 sm:p-6 relative">
+<!-- flex-col aqui permite o crescimento do conteúdo sem cortar -->
+<body class="min-h-[100dvh] w-full flex flex-col p-4 sm:p-6 relative">
     
     <!-- Container para Notificações (Toasts) -->
     <div id="toast-container" class="fixed top-6 right-6 z-50 flex flex-col gap-3"></div>
 
-    <div class="blob top-0 left-0"></div>
-    <div class="blob bottom-0 right-0" style="animation-direction: alternate-reverse; animation-duration: 30s;"></div>
+    <div class="blob top-0 left-0 fixed"></div>
+    <div class="blob bottom-0 right-0 fixed" style="animation-direction: alternate-reverse; animation-duration: 30s;"></div>
 
-    <!-- main wrapper com mx-auto, w-full e tamanho ideal para PC/Celular -->
-    <main class="w-full max-w-[420px] mx-auto z-10 flex flex-col items-center justify-center">
-        
-        <div class="w-full text-center mb-6 sm:mb-8 flex flex-col items-center justify-center">
-            <!-- Logo principal com mx-auto garantindo o centro exato -->
-            <img src="logo.png" alt="Lumis Logo" class="w-48 sm:w-60 h-auto object-contain mx-auto">
-            
-            <h2 class="w-full text-center text-[12px] sm:text-[13px] font-extrabold text-[#64748b] uppercase tracking-[0.15em] relative z-10 -mt-6 sm:-mt-8">
-                Organizador Financeiro
-            </h2>
-        </div>
+    <!-- m-auto centraliza de forma inteligente: fica no meio no PC, mas scrolla no celular -->
+    <main class="w-full max-w-[420px] m-auto z-10 flex flex-col items-center justify-center py-6 sm:py-8">
 
         <div class="clean-card w-full p-6 sm:p-10">
             
-            <!-- Título do Formulário -->
-            <div class="text-center mb-6 sm:mb-8">
+            <!-- Cabeçalho movido para DENTRO do cartão branco -->
+            <div class="text-center mb-6 sm:mb-8 flex flex-col items-center justify-center">
+                
+                <!-- Logo dentro da parte em branco, centralizada e sem margens negativas -->
+                <img src="logo.png" alt="Lumis Logo" class="w-40 sm:w-48 h-auto object-contain mx-auto mb-1">
+                
+                <!-- Texto Organizador Financeiro na cor da paleta e com espaçamento seguro -->
+                <h2 class="w-full text-center text-[11px] sm:text-[12px] font-extrabold text-[#0040A1] uppercase tracking-[0.2em] mb-6">
+                    Organizador Financeiro
+                </h2>
+
                 <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800 mb-2">Crie sua conta Premium</h3>
-                <p class="text-[13px] sm:text-sm text-slate-500 font-medium">Organize suas finanças com o poder total da nossa plataforma.</p>
+                <p class="text-[13px] sm:text-sm text-slate-500 font-medium">Organize suas finanças com o poder total da Lumis.</p>
             </div>
 
-            <div class="space-y-5 sm:space-y-6 w-full">
+            <div class="space-y-5 sm:space-y-6 w-full text-left">
                 
                 <div class="input-group w-full">
                     <label for="email" class="block text-left text-[11px] font-extrabold uppercase tracking-wider text-[#64748b] mb-2">Seu melhor E-mail</label>
@@ -141,7 +143,7 @@
                             </svg>
                         </button>
                     </div>
-                    <!-- Aviso de erro dinâmico em vermelho (alinhado à esquerda para seguir o layout) -->
+                    <!-- Aviso de erro dinâmico em vermelho -->
                     <p id="senhaErro" class="text-red-500 text-xs font-bold mt-2 hidden text-left pl-1 transition-all">As senhas não coincidem</p>
                 </div>
 
@@ -218,7 +220,7 @@
           }, 4000);
       }
 
-      // Alternar visualização da senha (agora aceita IDs dinâmicos para funcionar em ambos os campos)
+      // Alternar visualização da senha
       function togglePassword(inputId, iconId) {
         const input = document.getElementById(inputId);
         const icon = document.getElementById(iconId);
